@@ -172,3 +172,8 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+
+# stuff specific to this repo
+Figures/
+Outputs/

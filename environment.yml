@@ -1,0 +1,9 @@
+name: modearth
+channels:
+  - defaults
+dependencies:
+  - scipy
+  - matplotlib
+  - numpy
+  - numba
+  - spyder
