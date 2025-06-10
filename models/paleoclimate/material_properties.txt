@@ -1,0 +1,6 @@
+# material properties for simulation
+# materials, in row order: sticky air, upper continental crust, glacier ice 
+# standard density, thermal expansion, compressibility, viscosity model (0=const visc, 1=power law), viscosity (if constant), AD, n, Ea, Va, shear modulus, C0m, C1, sin(FI0), sin(FI1), Gamma0, Gamma1, C_P, k0, a, Radiogenic heat production
+ 1.2, 3e-5, 1e-11, 0, 1e18,      0,   0,       0, 0,   1e20,   0,   0,   0,   0, 0, 1, 3000,  300,   0,      0
+2800, 3e-5, 1e-11, 0, 1e24,      0,   0,       0, 0, 1.0e10,   0,   0,   0,   0, 0, 1, 1000, 0.64,   0,      0
+ 917, 3e-5, 1e-11, 1,    0, 1.0e-3,   3,    78e3, 0,  1.0e9,   0,   0,   0,   0, 0, 1, 2100,  2.1,   0,      0
