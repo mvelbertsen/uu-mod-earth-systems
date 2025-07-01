@@ -9,6 +9,10 @@ from matplotlib import figure
 import numpy as np
 from numba import jit
 
+
+from matplotlib.animation import FuncAnimation
+import matplotlib.colors as colors
+
 @jit
 def basicGridVelocities(gridvx, gridvy, xnum, ynum):
     '''
@@ -81,16 +85,19 @@ def plotAVar(grid, vxb, vyb, L_x, L_y, ntstp, t_curr):
     axs = fig.subplots(1,1, sharex=True, sharey=True)
 
     # plot the density as colormap
-    im = axs.pcolor(X, Y, grid.rho, shading='nearest', vmin=1000, vmax=3300)
+    # im = axs.pcolor(X, Y, grid.rho, shading='nearest', vmin=1000, vmax=3300)
+    im = axs.pcolor(X, Y, grid.rho, shading='nearest', vmin=0, vmax=3000)
     fig.colorbar(im, ax=axs,pad=0.0) # display colorbar
     axs.set_title('Density')     # set plot title
     axs.set(ylabel='y (km)')         # label the y-axis (shared axis for x)
     qu = axs.quiver(grid.x, grid.y, vxb[:yres,:], np.flip(-vyb[:,:xres],0)) 
     axs.invert_yaxis()
 
-    fig.suptitle('Time: %.3f Myr'%(t_curr*1e-6/(365.25*24*3600)))
+    fig.suptitle('Time: %.3f yr'%(t_curr/(365.25*24*3600)))
     fig.savefig('./Figures/rho_tstp_%i.png'%(ntstp))
     #plt.close()
+
+
 
 def plotSeveralVars(grid, vxb, vyb, L_x, L_y, ntstp, t_curr):
     '''
@@ -133,42 +140,56 @@ def plotSeveralVars(grid, vxb, vyb, L_x, L_y, ntstp, t_curr):
     axs = fig.subplots(2,3, sharex=True, sharey=True)
 
     # plot the density as colormap
-    im = axs[0,0].pcolor(X, Y, grid.rho, shading='nearest', vmin=1000, vmax=3300)
+    # im = axs[0,0].pcolor(X, Y, grid.rho, shading='nearest', vmin=1000, vmax=3300)
+    im = axs[0,0].pcolor(X, Y, grid.rho, shading='nearest', vmin=0, vmax=3000)
     fig.colorbar(im, ax=axs[0,0],pad=0.0) # display colorbar
     axs[0,0].set_title('Density')     # set plot title
-    axs[0,0].set(ylabel='y (km)')         # label the y-axis (shared axis for x)
+    axs[0,0].set(ylabel='y (m)')         # label the y-axis (shared axis for x)
     
     qu = axs[0,0].quiver(grid.x, grid.y, vxb[:yres,:], np.flip(-vyb[:,:xres],0)) 
     axs[0,0].invert_yaxis()
 
     # plot the pressure as colormap
-    im = axs[0,1].pcolor(X, Y, grid.P, shading='flat',vmin=0.1e9,vmax=9e9)
-    fig.colorbar(im, ax=axs[0,1],pad=0.0) # display colorbar
+    im = axs[0,1].pcolor(X, Y, grid.P, shading='flat', vmin=0e6, vmax=8e6)
+    # im = axs[0,1].pcolor(X, Y, grid.P, shading='flat', norm=colors.LogNorm(vmin=1e-10, vmax=2e7))
+    fig.colorbar(im, ax=axs[0,1],pad=0.0, extend='max') # display colorbar
     axs[0,1].set_title('Pressure')     # set plot title
 
+    # # plot vx as colormap
+    # im = axs[1,0].pcolor(X, Y, vxb*3600*24*365.25, shading='nearest', vmin=-1, vmax=1)#vmax=0.02)#vmax=0.04)
+    # fig.colorbar(im, ax=axs[1,0],pad=0.0, extend='both') # display colorbar
+    # axs[1,0].set_title('Vx (m/y)')     # set plot title
+    # axs[1,0].set(ylabel='y (m)', xlabel='x (m)')         # label the y-axis (shared axis for x)
+
+    # # plot vy as colormap
+    # im = axs[1,1].pcolor(X, Y, vyb*3600*24*365.25, shading='nearest', vmin=-1, vmax=1)#vmax=0.02)#vmax=0.04)
+    # fig.colorbar(im, ax=axs[1,1],pad=0.0, extend='both') # display colorbar
+    # axs[1,1].set_title('Vy (m/y)')     # set plot title
+    # axs[1,1].set(xlabel='x (k)')
+    
     # plot vx as colormap
-    im = axs[1,0].pcolor(X, Y, vxb, shading='nearest',vmin=-5e-10, vmax=5e-10)
-    fig.colorbar(im, ax=axs[1,0],pad=0.0) # display colorbar
-    axs[1,0].set_title('Vx')     # set plot title
-    axs[1,0].set(ylabel='y (km)', xlabel='x (km)')         # label the y-axis (shared axis for x)
+    im = axs[1,0].pcolor(X, Y, vxb*3600*24, shading='nearest', vmin=-0.02, vmax=0.02)#vmax=0.02)#vmax=0.04)
+    fig.colorbar(im, ax=axs[1,0],pad=0.0, extend='both') # display colorbar
+    axs[1,0].set_title('Vx (m/d)')     # set plot title
+    axs[1,0].set(ylabel='y (m)', xlabel='x (m)')         # label the y-axis (shared axis for x)
 
     # plot vy as colormap
-    im = axs[1,1].pcolor(X, Y, vyb, shading='nearest',vmin=-5e-10, vmax=5e-10)
-    fig.colorbar(im, ax=axs[1,1],pad=0.0) # display colorbar
-    axs[1,1].set_title('Vy')     # set plot title
-    axs[1,1].set(xlabel='x (km)')         
+    im = axs[1,1].pcolor(X, Y, vyb*3600*24, shading='nearest', vmin=-0.02, vmax=0.02)#vmax=0.02)#vmax=0.04)
+    fig.colorbar(im, ax=axs[1,1],pad=0.0, extend='both') # display colorbar
+    axs[1,1].set_title('Vy (m/d)')     # set plot title
+    axs[1,1].set(xlabel='x (k)')         
     
     # T
-    im = axs[0,2].pcolor(X, Y, grid.T, shading='nearest',vmin=273, vmax=1800)
+    im = axs[0,2].pcolor(X, Y, grid.T, shading='nearest', vmin=245, vmax=275)
     fig.colorbar(im, ax=axs[0,2],pad=0.0) # display colorbar
     axs[0,2].set_title('Temperature')     # set plot title
 
     # sigxy
-    im = axs[1,2].pcolor(X, Y, np.log10(grid.eta_s),vmin=18, vmax=25)
+    im = axs[1,2].pcolor(X, Y, np.log10(grid.eta_s) ,vmin=12, vmax=20)
     fig.colorbar(im, ax=axs[1,2],pad=0.0) # display colorbar
     axs[1,2].set_title('Viscosity')     # set plot title
     
-    fig.suptitle('Time: %.3f Myr'%(t_curr*1e-6/(365.25*24*3600)))
+    fig.suptitle('Time: %.3f yr'%(t_curr/(365.25*24*3600)))
 
     fig.savefig('./Figures/densT_tstp_%i.png'%(ntstp))
     #plt.close()
@@ -209,14 +230,14 @@ def plotMarkerFields(xsize, ysize, markers, grid, ntstp, t_curr):
     im = axs[0].imshow(mark_com, origin='upper', aspect='auto', extent=[0,xsize,ysize,0])
     fig.colorbar(im, ax=axs[0],pad=0.0) # display colorbar
     axs[0].set_title('Lithology')     # set plot title
-    axs[0].set(ylabel='y (m)', xlim=(50e3,350e3), ylim=(80e3,0))
+    axs[0].set(ylabel='y (m)')#, xlim=(50e3,350e3), ylim=(80e3,0))
     
     im = axs[1].imshow(np.log10(mark_gii), origin='upper', aspect='auto', extent=[0,xsize,ysize,0], vmin=-2, vmax=2)
     fig.colorbar(im, ax=axs[1],pad=0.0) # display colorbar
     axs[1].set_title('Strain')     # set plot title
-    axs[1].set(xlabel='x (m)', ylabel='y (m)', xlim=(50e3,350e3), ylim=(150e3,0))
+    axs[1].set(xlabel='x (m)', ylabel='y (m)')#, xlim=(50e3,350e3), ylim=(150e3,0))
     
-    fig.suptitle('Time: %.3f Myr'%(t_curr*1e-6/(365.25*24*3600)))
+    fig.suptitle('Time: %.3f yr'%(t_curr/(365.25*24*3600)))
     
     fig.savefig('./Figures/lithology_tstp_%i.png'%(ntstp))
     #plt.close()
@@ -316,4 +337,35 @@ def get_marker_fields_vis(xsize, ysize, markers, grid):
 
     
     
-    
+
+
+def animateAVar(grid_list, vxb_list, vyb_list, L_x, L_y, t_list, filename='Figures/animation.mp4'):
+    """
+    Animate a variable as a colormap with velocity arrows.
+    """
+    xres = grid_list[0].xnum
+    yres = grid_list[0].ynum
+    X, Y = np.meshgrid(grid_list[0].x, grid_list[0].y)
+
+    fig, ax = plt.subplots(figsize=(9, 9), constrained_layout=True)
+    im = ax.pcolor(X, Y, grid_list[0].rho, shading='nearest', vmin=0, vmax=3000)
+    quiv = ax.quiver(grid_list[0].x, grid_list[0].y, vxb_list[0], np.flip(-vyb_list[0], 0))
+    cb = fig.colorbar(im, ax=ax, pad=0.0)
+    ax.set_title('Density')
+    ax.set(ylabel='y (km)')
+    ax.invert_yaxis()
+
+    def update(frame):
+        grid = grid_list[frame]
+        vxb = vxb_list[frame]
+        vyb = vyb_list[frame]
+        im.set_array(grid.rho.ravel())
+        quiv.set_UVC(vxb, np.flip(-vyb, 0))
+        ax.set_title(f'Density - Time: {t_list[frame]:.3f} yr')
+        return im, quiv
+
+    anim = FuncAnimation(fig, update, frames=len(grid_list), blit=False)
+    anim.save(filename, writer='pillow')
+    plt.close(fig)
+
+    print('Animaiton made')

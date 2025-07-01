@@ -16,21 +16,12 @@ import matplotlib.pyplot as plt
 
 def mountain_slope_curve(x, xsize, ysize, params):
     '''
-    Define bedrock slope as concave up decreasing curve. Follows roughly bedrock slope of 10% (y=0.1x).
+    Define bedrock slope as concave up decreasing curve. Follows roughly bedrock slope of 15% (y=0.15x).
 
     '''
 
-    # a = (xsize/ysize*0.1) * ysize/(xsize**2)   # coefficient
-    # b = ysize/5*4                                # vertical offset
-    # mountain_slope = -a * x**2 + b      # note horizontal shift along x-axis (of -xsize)
-
-    # return mountain_slope
-    # return params.by+0.1*x
-    # return params.by+0.2*x
-    # return ysize/3 + 0.15*x
-    # return params.bx + 0.15*x                                                                                  # straight line
-    # return (ysize-params.bx) - (ysize-params.bx*2)/(xsize**2)*(x-xsize)**2                                     # quadratic - steeper
-    return ((ysize-params.bx) - (ysize-params.bx*2)/(xsize**2)*(x-xsize)**2)*0.5 + (1-0.5)*(params.bx + 0.15*x)  # quadratic - less steep
+    return       2*params.bx  +                           0.15*x                                                   # straight slope
+    # return ((ysize-params.bx) - (ysize-params.bx*3)/(xsize**2)*(x-xsize)**2)*0.5 + (1-0.5)*(params.bx*2 + 0.15*x)  # quadratic - less steep
 
 
 def glacier_surface_curve(x, xsize, ysize, params):
@@ -39,18 +30,7 @@ def glacier_surface_curve(x, xsize, ysize, params):
 
     '''
 
-    # a =  -(xsize/ysize*0.1) * ysize/((xsize/10*8)**2)   # coefficient
-    # b = 1-(xsize/10*0.8) + ysize/5*4                         # vertical offset
-    # # glacier_surface = -a * (x-xsize)**2 + b
-    # # glacier_surface = -a * (x+xsize/4)**2 #+ 575#b-200
-
-    # # glacier_surface = params.by + ysize/(xsize**2) * x**2 #+ 575#b-200
-    # glacier_surface = params.by + 0.2*(ysize**3)/(xsize**5) * x**4 #+ 575#b-200
-
-    # return glacier_surface
-    # # return ysize/2 + 1-(ysize/8*7) + ysize/xsize**2 * x**2
-    # return ysize/(xsize**4)*x**4 + ysize/3
-    return 5*ysize/(xsize**4)*x**4 + params.bx
+    return 5*ysize/(xsize**4)*x**4 + params.bx*2
 
 
 
@@ -91,29 +71,6 @@ def initialize_markers(markers, materials, params, xsize, ysize):
             # set coordinates as grid + small random displacement
             markers.x[mm] = (j + np.random.random())*mxstp
             markers.y[mm] = (i + np.random.random())*mystp
-                       
-
-            # # bedrock
-            # if markers.y[mm] >= topography_curve(markers.x[mm], xsize, ysize):
-            #     markers.id[mm] = 2
-            #     markers.T[mm] = 273
-
-            # # glacier
-            # elif markers.y[mm] >= ice_curve(markers.x[mm], xsize, ysize):
-            #     markers.id[mm] = 1
-            #     markers.T[mm] = 263
-
-            # # air         
-            # else: 
-            #     dtdy = 0.65/1000 # approximate adiabetic lapse rate for the air K/m
-            #     markers.id[mm] = 0 
-            #     markers.T[mm] = 253 - dtdy*(ysize - markers.y[mm])
-
-
-            # # now define type based on location, to give our initial setup
-            # # sticky air
-            # markers.id[mm] = 0
-            # markers.T[mm]  = 273        # 0 °C
             
             # bedrock
             if markers.y[mm] >= mountain_slope_curve(markers.x[mm], xsize, ysize, params) or markers.y[mm] >= ysize-params.by:
@@ -123,23 +80,23 @@ def initialize_markers(markers, materials, params, xsize, ysize):
             # glacier   # try to reproduce glacier shape from SIA
             elif markers.y[mm] >= glacier_surface_curve(markers.x[mm], xsize, ysize, params):
                 markers.id[mm] = 2
-                markers.T[mm]  = 263    # -10 °C
+                markers.T[mm]  = 273    # 0 °C
 
             # air         
             else: 
                 dtdy = 6.5/1000 # approximate environmental adiabetic lapse rate for the air °C/m
                 markers.id[mm] = 0 
-                markers.T[mm] = 253 - dtdy*(ysize - markers.y[mm])
+                markers.T[mm] = 273 - dtdy*(ysize - markers.y[mm])
 
             # update marker index
             mm +=1
-    plt.title('Model setup: initial markers \n shows different materials (air, bedrock, ice)')
-    plt.scatter(markers.x, markers.y, c=markers.id)
-    plt.xlim(0,xsize)
-    plt.ylim(0,ysize)
-    plt.xlabel('distance [m]')
-    plt.ylabel('height [m]')
-    plt.show()
+    # plt.title('Model setup: initial markers \n shows different materials (air, bedrock, ice)')
+    # plt.scatter(markers.x, markers.y, c=markers.id)
+    # plt.xlim(0,xsize)
+    # plt.ylim(0,ysize)
+    # plt.xlabel('distance [m]')
+    # plt.ylabel('height [m]')
+    # plt.show()
 
 
     
@@ -213,15 +170,13 @@ def initializeModel():
     ## time 
     params.t_end = 1000 * 365.25 * 3600 * 24  # set end time at t = 100 years for now
     params.tstp_max = 365.25 * 3600 * 24 # max 1 year timestep
-    params.ntstp_max = 360*2                    # maximum number of timesteps
+    params.ntstp_max = 360*1                    # maximum number of timesteps
     params.Temp_stp_max = 20                  # maximum number of temperature substeps
+    params.save_output = 50                   # number of steps between output files
+    params.save_fig = 20                      # number of steps between figure output
     
     # additional model options 
     # initial system size
-    # xsize0 = 10000   # 10 km
-    # ysize0 =  2000   # 2 km
-    # xsize0 = 10000   # 4 km
-    # ysize0 = 1100   # 1.5 km
     xsize0 = 4000
     ysize0 = 700
     
@@ -229,12 +184,8 @@ def initializeModel():
     ysize = ysize0
 
     # set resolution
-    # xnum = 401   # 25 m
-    # ynum = 81    # 25 m
-    # xnum = 501#161   # 25 m
-    # ynum = 76#61    # 25 m
-    xnum = 161   # 25 m
-    ynum = 61    # 25 m
+    xnum = 321   # 12.5 m
+    ynum = 57    # 12.5 m
 
 
     params.bx = xsize/(xnum-1)
@@ -245,7 +196,8 @@ def initializeModel():
     params.frict_yn = 0
     params.eta_min = 1e5
     params.eta_max = 1e25
-    params.T_top = 273 - 20 - (6.5/1000)*ysize   # Top of model, temperature (air) is 20 degrees below zero
+    params.stress_min = 1e5 
+    params.T_top = 273 - (6.5/1000)*ysize   # Top of model, temperature (air) is 20 degrees below zero
     params.T_bot = 273                           # Bottom of model, temperature (bedrock) is 2 degrees above zero
     
 
@@ -314,8 +266,8 @@ def initializeModel():
 
     ############################################################################
     # create markers object
-    mnumx = xnum*4#400
-    mnumy = ynum*4#300
+    mnumx = xnum*2#400
+    mnumy = ynum*2#300
     markers = Markers(mnumx, mnumy)
 
     # initialize markers
@@ -323,18 +275,3 @@ def initializeModel():
     
     return params, grid, materials, markers, xsize, ysize, P_first, B_top, B_bottom,\
            B_left, B_right, B_intern, BT_top, BT_bottom, BT_left, BT_right
-    
-    
-    
-
-
-
-
-
-
-
-
-
-
-
-    
