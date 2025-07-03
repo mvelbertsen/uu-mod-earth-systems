@@ -14,12 +14,14 @@ from copy import deepcopy
 from time import time
 import os
 
+import matplotlib.pyplot as plt
+
 # if debugging, this should be 1 AND jitclass tags in dataStructures must be commented out!
 os.environ["NUMBA_DISABLE_JIT"] = "0"
 # if 1 prints out extra statements at various places in the timeloop
 debug = 0
 
-# load the component fucntions from their respective files
+# load the component functions from their respective files
 from dataStructures import Markers, Materials, Grid, Parameters, copyGrid
 
 from physics.StokesContinuitySolver import StokesContinuitySolver, constructStokesRHS
@@ -29,11 +31,13 @@ from physics.markers_fns import markersToGrid, gridToMarker, updateMarkerErat, s
 from physics.grid_fns import updateStresses, viscElastStress, strainRateComps, gridSpacings
 
 from visualisation import plotAVar, plotSeveralVars, plotMarkerFields, basicGridVelocities
+from visualisation import animateAVar
 
 # load the setup fn for the chosen model
-from models.lithosphereExtension.setup import initializeModel
+from models.paleoclimate.setup import initializeModel
 
 
+anim = 1
 
 
 strt = time()
@@ -57,6 +61,19 @@ ystp_av = ysize/(ynum-1)
 # initialize timesteping
 time_curr = 0
 timestep = params.tstp_max
+
+if (anim):
+    # for animation
+    grid_list = []
+    vxb_list = []
+    vyb_list = []
+    t_list = []
+
+# Find velocity maxima/minima
+vxmax_val = 0.
+vxmin_val = 0.
+vymax_val = 0.
+vymin_val = 0.
 
 
 ###############################################################################
@@ -160,8 +177,22 @@ for nt in range(0, params.ntstp_max):
     strainRateComps(grid, xnum, ynum)
     
     # check velocity maxima
-    vxmax = max(abs(np.max(grid.vx)), abs(np.min(grid.vx)))
-    vymax = max(abs(np.max(grid.vy)), abs(np.min(grid.vy)))
+    vxmax_0 = abs(np.max(grid.vx))
+    vxmax_1 = abs(np.min(grid.vx))
+    vymax_0 = abs(np.max(grid.vy))
+    vymax_1 = abs(np.min(grid.vy))
+
+    if vxmax_val < vxmax_0:
+        vxmax_val = vxmax_0
+    if vxmin_val < vxmax_1:
+        vxmin_val = vxmax_1
+    if vymax_val < vymax_0:
+        vymax_val = vymax_0
+    if vymin_val < vymax_1:
+        vymin_val =  vymax_1
+
+    vxmax = max(vxmax_0, vxmax_1)
+    vymax = max(vymax_0, vymax_1)
     
     # update timestep based on maximal velocities
     if (vxmax > 0):
@@ -188,7 +219,7 @@ for nt in range(0, params.ntstp_max):
     gridToMarker([grid.epsxx, grid.P], [markers.epsxx, markers.P],\
                  markers.x, markers.y, markers.nx, markers.ny, grid, node_type=1)
     
-    # then the epsii/rat, which has it's own correction
+    # then the epsii/rat, which has its own correction
     updateMarkerErat(markers, materials, grid, timestep)
     
     # compute subgrid stress changes for markers
@@ -285,28 +316,43 @@ for nt in range(0, params.ntstp_max):
         # plotting
         plotAVar(grid, vxb, vyb, xsize, ysize, nt, time_curr)
         plotSeveralVars(grid, vxb, vyb, xsize, ysize, nt, time_curr)
-        plotMarkerFields(xsize, ysize, markers, grid, nt, time_curr)
+        # plotMarkerFields(xsize, ysize, markers, grid, nt, time_curr)
+
+        if (anim):
+            # Store data for animation
+            grid_snapshot = Grid(xnum, ynum)
+            copyGrid(grid, grid_snapshot)
+            grid_list.append(grid_snapshot)
+            vxb_list.append(vxb.copy())
+            vyb_list.append(vyb.copy())
+            t_list.append(time_curr / (365.25 * 24 * 3600))
     
     
     ###########################################################################
     # advance timestep
+    # print(nt, time_curr, timestep)
     time_curr += timestep
-    print('Time: %.3f Myr'%(time_curr*1e-6/(365.25*24*3600)))
+    print('Time: %.3f yr'%(time_curr/(365.25*24*3600)))
     
-    if (debug):
-        print('updating grid spacings')
+    # if (debug):
+    #     print('updating grid spacings')
     
     # update grid positions based on extension
-    ysize += -params.v_ext/xsize*ysize*timestep
-    xsize += params.v_ext*timestep
+    # ysize += -params.v_ext/xsize*ysize*timestep
+    # xsize += params.v_ext*timestep
     
-    gridSpacings(params.bx, params.by, params.Nx, params.Ny, params.non_uni_xsize, xsize, ysize, grid, time_curr)
+    # gridSpacings(params.bx, params.by, params.Nx, params.Ny, params.non_uni_xsize, xsize, ysize, grid, time_curr)
     
     # if we have changing grid, need to update bottom BC
-    if (abs(params.v_ext)>0):
-        B_bottom[:,2] = -params.v_ext/xsize*ysize
-        B_bottom[:,3] = 0
+    # if (abs(params.v_ext)>0):
+    #     B_bottom[:,2] = -params.v_ext/xsize*ysize
+    #     B_bottom[:,3] = 0
 
 end = time() - strt
-print('time elapsed: %f'%(end))    
+print('time elapsed: %f'%(end))
 
+print(f'Velocities: {vxmax_val*3600*24*365.25:1.3f}, {-vxmin_val*3600*24*365.25:1.3f}, {vymax_val*3600*24*365.25:1.3f}, {-vymin_val*3600*24*365.25:1.3f} [m/y]')
+
+if (anim):
+    # Save animation
+    animateAVar(grid_list, vxb_list, vyb_list, xsize, ysize, t_list, filename='Figures/glacier_animation.gif')
