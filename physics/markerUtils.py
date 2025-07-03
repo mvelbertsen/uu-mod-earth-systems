@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-marker utilities - low level functions for marker calculations
+Low level functions for marker calculations, including marker-to-grid/grid-to-marker interpolation, and finding nearest node distances.
 
 """
 import numpy as np
-from dataStructures import Markers, Materials, Grid, Parameters
+from dataStructures import Markers, Materials, Grid
 from numba import jit
 
 @jit(nopython=True)

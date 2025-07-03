@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
+"""
+Stokes and Continuity equations solver.  
 
+Uses scipy's sparse arrays and sparse direct matrix solver to solve the Stokes and Continuity equations in 2D.
+
+"""
 import numpy as np
 from scipy.sparse import bsr_matrix, csr_matrix, coo_array
 from scipy.sparse.linalg import spsolve
@@ -192,10 +197,10 @@ def StokesConstructMatrix(xnum, ynum, xstp, xstpc, ystp, ystpc, xstp_av, ystp_av
         Array defining optional internal boundary eg. moving wall. Format is:
         B_intern[0] = x-index of vx nodes with prescribed velocity (-1 is not in use)
         B_intern[1-2] = min/max y-index of the wall
-        B_intern[4] = prescribed x-velocity value.
-        B_intern[5] = y-index of vy nodes with prescribed velocity (-1 is not in use)
-        B_intern[6-7] = min/max x-index of the wall
-        B_intern[8] = prescribed y-velocity value.
+        B_intern[3] = prescribed x-velocity value.
+        B_intern[4] = x-index of vy nodes with prescribed velocity (-1 is not in use)
+        B_intern[5-6] = min/max y-index of the wall
+        B_intern[7] = prescribed y-velocity value.
 
     Returns
     -------
@@ -683,10 +688,10 @@ def StokesContinuitySolver(P_first, eta_s, eta_n, xnum, ynum, gridx, gridy, R_x,
         Array defining optional internal boundary eg. moving wall. Format is:
         B_intern[0] = x-index of vx nodes with prescribed velocity (-1 is not in use)
         B_intern[1-2] = min/max y-index of the wall
-        B_intern[4] = prescribed x-velocity value.
-        B_intern[5] = y-index of vy nodes with prescribed velocity (-1 is not in use)
-        B_intern[6-7] = min/max x-index of the wall
-        B_intern[8] = prescribed y-velocity value.
+        B_intern[3] = prescribed x-velocity value.
+        B_intern[4] = x-index of vy nodes with prescribed velocity (-1 is not in use)
+        B_intern[5-6] = min/max y-index of the wall
+        B_intern[7] = prescribed y-velocity value.
 
     Returns
     -------
@@ -765,7 +770,7 @@ def StokesContinuitySolver(P_first, eta_s, eta_n, xnum, ynum, gridx, gridy, R_x,
 @jit
 def calculateResiduals(xnum, ynum, xstp, xstpc, ystp, ystpc, eta_s, eta_n, vx, vy, P, R_x, R_y, R_C, B_intern):
     '''
-    
+    Calculates the residuals of the Stoke's solver.
 
     Parameters
     ----------
@@ -821,7 +826,7 @@ def calculateResiduals(xnum, ynum, xstp, xstpc, ystp, ystpc, eta_s, eta_n, vx, v
         for j in range(0, xnum+1):
             ####################################################################
             # x Stokes eqn
-            if (j<xnum and (j!=B_intern[0] or i<B_intern[1] or i>B_intern[3])):
+            if (j<xnum and (j!=B_intern[0] or i<B_intern[1] or i>B_intern[2])):
                 if (i==0 or i==ynum or j==0 or j==xnum-1):
                     resx[i,j] = 0
                 else:

@@ -157,7 +157,7 @@ for nt in range(0, params.ntstp_max):
     if (time_curr==0):
         gridToMarker([grid.T], [markers.T], markers.x, markers.y, markers.nx, markers.ny, grid)
     
-    # compute viscoelastic visc and stress
+    # compute viscoelastic visc and stress    
     viscElastStress(grid, grid0, timestep, xnum, ynum)
                 
     # Compute RHS of Stokes+cont
@@ -347,6 +347,11 @@ for nt in range(0, params.ntstp_max):
     # if (abs(params.v_ext)>0):
     #     B_bottom[:,2] = -params.v_ext/xsize*ysize
     #     B_bottom[:,3] = 0
+        
+    if (time_curr >= params.t_end):
+        # we have reached the max time specified, exit loop
+        print('t_end reached, exiting loop')
+        break
 
 end = time() - strt
 print('time elapsed: %f'%(end))

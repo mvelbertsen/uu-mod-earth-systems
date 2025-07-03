@@ -1,0 +1,6 @@
+# material properties for simulation
+# left, right
+# standard density, thermal expansion, compressibility, viscosity model (0=const visc, 1=power law), viscosity (if constant), AD, n, Ea, Va, shear modulus, C0m C1, sin(FI0), sin(FI1), Gamma0, Gamma1, C_P, k0, a, Radiogenic heat production
+3300, 0, 0, 0, 1e22, 0, 0, 0, 0, 6.7e5, 0, 0, 0, 0, 0, 0, 1000, 3, 0, 0
+3300, 0, 0, 0, 1e20, 0, 0, 0, 0, 6.7e5, 0, 0, 0, 0, 0, 0, 1000, 3, 0, 0
+

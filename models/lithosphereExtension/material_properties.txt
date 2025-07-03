@@ -1,6 +1,7 @@
 # material properties for simulation
 # materials, in row order: sticky air, sediments, upper oceanic crust (basalts), lower oceanic crust (gabbro), lithospheric mantle, asthenospheric mantle, hydrated mantle, upper continental crust, upper continental crust (for visualisation), lower continental crust, lower continental crust (for visualisation) 
-# standard density, thermal expansion, compressibility, viscosity model (0=const visc, 1=power law), viscosity (if constant), AD, n, Ea, Va, shear modulus, C0m C1, sin(FI0), sin(FI1), Gamma0, Gamma1, C_P, k0, a, Radiogenic heat production
+# content of each row, see definition of Materials object in dataStructures for details on parameters:
+# standard density, thermal expansion, compressibility, viscosity model flag (0=const visc, 1=power law), viscosity (if constant), AD, n, Ea, Va, shear modulus, C0m C1, sin(FI0), sin(FI1), Gamma0, Gamma1, C_P, k0, a, Radiogenic heat production
 1000, 3e-5, 1e-11, 0, 1e18, 0, 0, 0, 0, 1e20, 0, 0, 0, 0, 0, 1, 3000, 300, 0, 0
 2700, 3e-5, 1e-11, 1, 0, 3.2e-4, 2.3, 154.0e3, 0,     1.0e10, 1e6, 1e6, 0.1, 0.1, 0, 1, 1000, 0.64, 807, 2e-6
 3000, 3e-5, 1e-11, 1, 0, 3.2e-4, 2.3, 154.0e3, 0,     2.5e10, 1e6, 1e6, 0.1, 0.1, 0, 1, 1000, 1.18, 474, 2.5e-7

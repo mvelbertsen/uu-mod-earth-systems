@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Simple intrusion with visc, T,  density contrast
+Simple square of higher viscosity with internal boundary wall to cause it to move.
+A demonstration of the 'moving wall' internal boundary conditions.
 """
 import numpy as np
 
 from dataStructures import Markers, Grid, Materials
 from physics.grid_fns import gridSpacings
 import pathlib
-
 from numba import jit, float64, int64
 from numba.experimental import jitclass
+
 
 def initializeModel():
     '''
@@ -101,10 +102,10 @@ def initializeModel():
 
 
     # instantiate/load material properties object
-    matData = np.loadtxt('./models/simpleStokesTest/material_properties_simple.txt', delimiter=",")
+    matData = np.loadtxt('./models/internalVelocityTest/material_properties_simple.txt', delimiter=",")
     materials = Materials(matData) 
 
-    params.save_fig = 2
+    params.save_fig = 1
     params.ntstp_max = 10
 
     # create directories for output of figures and data (not atm)
@@ -116,7 +117,7 @@ def initializeModel():
     # pressure BCs
     P_first = np.array([0,1e5])
 
-    # velocity BCs
+    # velocity BCs, free slip
     B_top = np.zeros([xnum+1,4])
     B_top[:,1] = 1
 
@@ -129,10 +130,22 @@ def initializeModel():
     B_right = np.zeros([ynum+1,4])
     B_right[:,3] = 1
 
-    # optional internal boundary, switched off
+    # optional internal boundary, create a fixed velocity wall, to test the conditions
     B_intern = np.zeros([8])
-    B_intern[0] = -1
+    # for a x-direction
     B_intern[4] = -1
+    B_intern[0] = 13
+    B_intern[1] = 7
+    B_intern[2] = 13
+    B_intern[3] = 1e-6
+    
+    # for a y-direction
+    #B_intern[0] = -1
+    #B_intern[4] = 15
+    #B_intern[5] = 7
+    #B_intern[6] = 13
+    #B_intern[7] = 1e-6
+    
     
     # temperature BCs
     BT_top = np.zeros([xnum, 2])
@@ -211,7 +224,7 @@ def initialize_markers(markers, materials, params, xsize, ysize):
             # inside the intrusion
             if (markers.y[mm] > ysize*0.4 and markers.y[mm] < ysize*0.6 and markers.x[mm] > xsize*0.4 and markers.x[mm] < xsize*0.6):
                 markers.id[mm] = 0
-                markers.T[mm] = 1300
+                markers.T[mm] = 1000
             else:
                 markers.id[mm] = 1
                 markers.T[mm] = 1000

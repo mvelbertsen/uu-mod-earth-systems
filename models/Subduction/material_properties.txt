@@ -1,0 +1,16 @@
+# material properties for simulation
+# materials, in row order: sticky air (6-0), sediments (7-1), upper oceanic crust (basalts) (8-2), lower oceanic crust (gabbro) (9-3), lithospheric mantle (10-4), asthenospheric mantle (11-5), 
+# hydrated mantle (12-6), upper continental crust (13-7), upper continental crust (for visualisation) (14-8), lower continental crust (15-9), lower continental crust (for visualisation) (16-10)
+# standard density, thermal expansion, compressibility, viscosity model (0=const visc, 1=power law), viscosity (if constant), 
+# AD, n, Ea, Va, shear modulus, C0m C1, sin(FI0), sin(FI1), Gamma0, Gamma1, C_P, k0, a, Radiogenic heat production
+1000, 3e-5, 1e-11, 0, 1e18, 0, 0, 0, 0, 1e20, 0, 0, 0, 0, 0, 1, 3000, 300, 0, 0
+2700, 3e-5, 1e-11, 1, 0, 3.2e-4, 2.3, 154.0e3, 0,     1.0e10, 1e6, 1e6, 0.03, 0.03, 0, 1, 1000, 0.64, 807, 2e-6  
+3200, 3e-5, 1e-11, 1, 0, 3.2e-4, 2.3, 154.0e3, 0,     2.5e10, 1e6, 1e6, 0.03, 0.03, 0, 1, 1000, 1.18, 474, 2.5e-7  
+3200, 3e-5, 1e-11, 1, 0, 3.3e-4, 3.2, 238.0e3, 0,     2.5e10, 1e6, 1e6, 0.2, 0.2, 0, 1, 1000, 1.18, 474, 2.5e-7    
+3300, 3e-5, 1e-11, 1, 0, 2.5e+4, 3.5, 532.0e3, 10e-6, 6.7e10, 1e6, 1e6, 0.6, 0.6, 0, 1, 1000, 0.73, 1293, 2.2e-8
+3300, 3e-5, 1e-11, 1, 0, 2.5e+4, 3.5, 532.0e3, 10e-6, 6.7e10, 1e6, 1e6, 0.6, 0.6, 0, 1, 1000, 0.73, 1293, 2.2e-8
+3300, 3e-5, 1e-11, 1, 0, 2.0e+3, 4.0, 471.0e3, 0,     6.7e10, 1e6, 1e6, 0.03, 0.03, 0, 1, 1000, 0.73, 1293, 2.2e-8
+2800, 3e-5, 1e-11, 1, 0, 3.2e-4, 2.3, 154.0e3, 0,     3.0e10, 1e6, 1e6, 0.2, 0.2, 0, 1, 1000, 0.64, 807, 1.0e-6
+2800, 3e-5, 1e-11, 1, 0, 3.2e-4, 2.3, 154.0e3, 0,     3.0e10, 1e6, 1e6, 0.2, 0.2, 0, 1, 1000, 0.64, 807, 1.0e-6
+2900, 3e-5, 1e-11, 1, 0, 3.3e-4, 3.2, 238.0e3, 0,     3.0e10, 1e6, 1e6, 0.2, 0.2, 0, 1, 1000, 1.18, 474, 5.0e-7
+2900, 3e-5, 1e-11, 1, 0, 3.3e-4, 3.2, 238.0e3, 0,     3.0e10, 1e6, 1e6, 0.2, 0.2, 0, 1, 1000, 1.18, 474, 5.0e-7

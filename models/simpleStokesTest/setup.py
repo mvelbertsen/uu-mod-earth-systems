@@ -5,9 +5,11 @@ Simple Stoke's flow test with constant visc, T and vertical density contrast
 """
 import numpy as np
 
-from dataStructures import Markers, Parameters, Grid, Materials
+from dataStructures import Markers, Grid, Materials
 from physics.grid_fns import gridSpacings
 import pathlib
+from numba import jit, float64, int64
+from numba.experimental import jitclass
 
 def initializeModel():
     '''
@@ -53,10 +55,10 @@ def initializeModel():
         Array defining optional internal boundary eg. moving wall. Format is:
         B_intern[0] = x-index of vx nodes with prescribed velocity (-1 is not in use)
         B_intern[1-2] = min/max y-index of the wall
-        B_intern[4] = prescribed x-velocity value.
-        B_intern[5] = y-index of vy nodes with prescribed velocity (-1 is not in use)
-        B_intern[6-7] = min/max x-index of the wall
-        B_intern[8] = prescribed y-velocity value.
+        B_intern[3] = prescribed x-velocity value.
+        B_intern[4] = x-index of vy nodes with prescribed velocity (-1 is not in use)
+        B_intern[5-6] = min/max y-index of the wall
+        B_intern[7] = prescribed y-velocity value.
     BT_top : ARRAY
         Top temperature BCs.  Array has 2 columns, values in each are defined as:
         T[i,j] = BT_top[0] + BT_top[1]*T[i+1,j]
@@ -98,7 +100,7 @@ def initializeModel():
 
 
     # instantiate/load material properties object
-    matData = np.loadtxt('./models/simpleStokesTest/material_properties_simple.txt', skiprows=3, delimiter=",")
+    matData = np.loadtxt('./models/simpleStokesTest/material_properties_simple.txt', delimiter=",")
     materials = Materials(matData) 
 
     # output options
@@ -217,3 +219,170 @@ def initialize_markers(markers, materials, params, xsize, ysize):
             
             # update marker index
             mm +=1
+            
+            
+spec_par = [
+    ('gx', float64),
+    ('gy', float64),
+    ('Rgas', float64),
+    ('T_min', float64),
+    ('v_ext', float64),
+    ('eta_min', float64),
+    ('eta_max', float64),
+    ('stress_min', float64),
+    ('eta_wt', float64),
+    ('max_pow_law', float64),
+    ('t_end', float64),
+    ('ntstp_max', int64),
+    ('Temp_stp_max', int64),
+    ('tstp_max', float64),
+    ('marker_max', float64),
+    ('marker_sch', int64),
+    ('movemode', int64),
+    ('dsubgrid', float64),
+    ('dsubgridT', float64),
+    ('frict_yn', float64),
+    ('adia_yn', float64),
+    ('bx', float64),
+    ('by', float64),
+    ('Nx', int64),
+    ('Ny', int64),
+    ('non_uni_xsize', float64),
+    ('save_output', int64),
+    ('save_fig', int64),
+]
+@jitclass(spec_par)
+class Parameters():
+    '''
+    Class which holds the values of various physical and numerical parameters
+    required in the simulation.
+    
+    Attributes
+    ----------
+    gx : FLOAT
+        x-direction component of gravitational acceleration.
+    gy : FLOAT
+        y-direction component of gravitational acceleration.
+    Rgas : FLOAT
+        Ideal gas constant.
+    T_min : FLOAT
+        Minimum allowed temperature.
+    v_ext : FLOAT
+        Grid extension velocity, for deforming grid.
+    eta_min : FLOAT
+        Minimum allowed viscosity.
+    eta_max : FLOAT
+        Maximum allowed viscosity.
+    eta_wt : FLOAT
+        Weighting value for a (potentially not in use) visco-plastic model.
+    max_pow_law : FLOAT
+        Maximum allowed exponent in the power law viscosity model.
+    t_end : FLOAT
+        Time at which to end the simulation (if number of tsteps is less than ntstp_max).
+    ntstp_max : INT
+        Maximum number of timesteps to take.
+    Temp_stp_max : INT
+        Maximum number of temperature sub-timesteps to take.
+    tstp_max : FLOAT
+        Maximum size of timestep.
+    marker_max : FLOAT
+        Maximum fraction of average grid cell that a marker can move per timestep.
+    marker_sch : INT
+        Choice of advection scheme for markers, 1 = Euler, 4 = RK4
+    movemode : INT
+        Choice of how velocities are calculated, 0 = Stokes, no others implemented at present.
+    dsubgrid : FLOAT
+        Subgrid stress coefficient.
+    dsubgridT : FLOAT
+        Subgrid temperature diffusion coefficient.
+    frict_yn : FLOAT
+        Flag to apply friction heating.
+    adia_yn : FLOAT
+        Flag to apply adiabatic heating.
+    bx: FLOAT
+        x-grid spacing in the high resolution region of the grid.  For uniform grid
+        this should be xsize/(xnum-1).
+    by: FLOAT
+        y-grid spacing in the high resolution region of the grid.  For uniform grid
+        this should be ysize/(ynum-1).
+    Nx: INT
+        Number of uneven grid cells either side of the central high resolution 
+        region in the x-direction, for uniform grid this should be 0.
+    Ny: INT
+        Number of uneven grid cells below the high resolution 
+        region in the y-direction, for uniform grid this should be 0.
+    non_uni_size: FLOAT
+        Physical size of the non-uniform grid region in the x-direction.  For 
+        uniform grid this should be 0.
+    save_output : INT
+        Number of steps between output, not currently implemented.
+    save_fig : INT
+        Number of steps between plotting of figures.
+    
+    
+    '''
+    
+    
+    # creates parameters object
+    def __init__(self):
+        '''
+        Constructor for the parameters class
+        
+        Sets the default (lithsphere extension) values for all params
+
+        Returns
+        -------
+        None.
+
+        '''
+        # main parameters, required by all simulations
+        
+        # physical constants
+        self.gx = 0.0                           # x-direction gravitational acc
+        self.gy = 9.81                          # y-direction gravitational acc
+        self.Rgas = 8.314                       # gas constant
+        
+        # physical model setup
+        self.T_min = 273                        # temperature at the top face of the model (K)
+        
+        self.v_ext = 2.0/(100*365.25*24*3600)   # extension velocity of the grid (cm/yr)
+        
+        # viscosity model
+        self.eta_min = 1e18                     # minimum viscosity
+        self.eta_max = 1e25                     # maximum viscosity
+        self.stress_min = 1e4                   # minimum stress
+        self.eta_wt = 0                         # viscosity weighting, for (old?) visco-plastic model
+        self.max_pow_law = 150                  # maximum power law exponent in visc model
+        
+        
+        # timestepping
+        self.t_end = 72e3/self.v_ext            # end time
+        self.ntstp_max = 360                    # maximum number of timesteps
+        self.Temp_stp_max = 20                  # maximum number of temperature substeps
+        
+        self.tstp_max = 1e4*365.25*24*3600      # maximum timestep
+        
+        # marker options
+        self.marker_max = 0.3                   # maximum marker movement per timestep (fraction of av. grid step)
+        self.marker_sch = 4                     # marker scheme 0 = no movement, 1 = Euler, 4=RK4
+        
+        self.movemode = 0                       # velocity calculation 0 = momentum eqn, 1 = solid body (not working currently)
+        
+        # subgrid diffusion
+        self.dsubgrid = 1                       # subgrid stress coeff (none if zero)
+        self.dsubgridT = 1                      # subgrid diffusion coeff(none if zero)
+        
+        # switches for heating terms
+        self.frict_yn = 1                       # use friction heating?
+        self.adia_yn = 1                        # use adiabatic heating?
+        
+        # grid spacing params
+        self.bx = 2000                          # x-grid spacing in high res area
+        self.by = 2000                          # y-grid spacing in high res area
+        self.Nx = 30                            # number of unevenly spaced grid points either side of high res zone
+        self.Ny = 20                            # number of unvenly spaced grid points below high res zone
+        self.non_uni_xsize = 100000             # physical x-size of non-uniform grid region
+        
+        # output options
+        self.save_output = 50                        # number of steps between output files
+        self.save_fig = 20                            # number of steps between figure output

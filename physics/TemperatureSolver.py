@@ -1,15 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-'''
- Function Temperature_solver_grid()
- This file contains the above function which formulates and solves  
- Heat conservation equation defined on 2D irregularly spaced grid
- with specified resolution (xnum, ynum) and grid lines positions (gridx, gridy)
- given distribution of right parts for all equations (RT) on the grid 
- and given RHO*CP and k values
- 
+"""
+Temperature equation solver.  
 
-'''
+Uses scipy's sparse arrays and sparse direct matrix solver to solve the temperature equation in 2D.
+
+"""
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -320,7 +316,7 @@ def TemperatureSolver(tstep, xnum, ynum, gridx, gridy, kt, rho_Cp, B_top, B_bott
 @jit
 def calculateResiduals(xnum, ynum, xstp, xstpc, ystp, ystpc, rho_Cp, T_k_new, T_k, kt, R_heat, tstep):
     '''
-    
+    Calculates the residuals of the solver.
 
     Parameters
     ----------
