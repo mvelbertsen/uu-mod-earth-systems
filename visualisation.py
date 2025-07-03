@@ -165,7 +165,7 @@ def plotSeveralVars(grid, vxb, vyb, L_x, L_y, ntstp, t_curr):
     # im = axs[1,1].pcolor(X, Y, vyb*3600*24*365.25, shading='nearest', vmin=-1, vmax=1)#vmax=0.02)#vmax=0.04)
     # fig.colorbar(im, ax=axs[1,1],pad=0.0, extend='both') # display colorbar
     # axs[1,1].set_title('Vy (m/y)')     # set plot title
-    # axs[1,1].set(xlabel='x (k)')
+    # axs[1,1].set(xlabel='x (m)')
     
     # plot vx as colormap
     im = axs[1,0].pcolor(X, Y, vxb*3600*24, shading='nearest', vmin=-0.02, vmax=0.02)#vmax=0.02)#vmax=0.04)
@@ -177,7 +177,7 @@ def plotSeveralVars(grid, vxb, vyb, L_x, L_y, ntstp, t_curr):
     im = axs[1,1].pcolor(X, Y, vyb*3600*24, shading='nearest', vmin=-0.02, vmax=0.02)#vmax=0.02)#vmax=0.04)
     fig.colorbar(im, ax=axs[1,1],pad=0.0, extend='both') # display colorbar
     axs[1,1].set_title('Vy (m/d)')     # set plot title
-    axs[1,1].set(xlabel='x (k)')         
+    axs[1,1].set(xlabel='x (m)')         
     
     # T
     im = axs[0,2].pcolor(X, Y, grid.T, shading='nearest', vmin=245, vmax=275)
@@ -269,8 +269,8 @@ def get_marker_fields_vis(xsize, ysize, markers, grid):
     '''
     
     # define the image resolution
-    xres = int(xsize/1000) + 1
-    yres = int(ysize/1000) + 1
+    xres = int(xsize) + 1
+    yres = int(ysize) + 1
     
     ngrid = 2
     

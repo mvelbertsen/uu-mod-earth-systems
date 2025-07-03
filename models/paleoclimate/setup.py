@@ -20,8 +20,10 @@ def mountain_slope_curve(x, xsize, ysize, params):
 
     '''
 
-    return       2*params.bx  +                           0.15*x                                                   # straight slope
+    # return       2*params.bx  +                           0.15*x                                                   # straight slope
     # return ((ysize-params.bx) - (ysize-params.bx*3)/(xsize**2)*(x-xsize)**2)*0.5 + (1-0.5)*(params.bx*2 + 0.15*x)  # quadratic - less steep
+    # return ((ysize-params.bx) - (ysize-params.bx*3)/(xsize**2)*(x-xsize)**2)*0.2 + (1-0.2)*(params.bx*2 + 0.15*x)  # quadratic - even less steep
+    return 700 * np.log10(0.001*x + 1) + 25                                                               # logarithmic
 
 
 def glacier_surface_curve(x, xsize, ysize, params):
@@ -90,13 +92,13 @@ def initialize_markers(markers, materials, params, xsize, ysize):
 
             # update marker index
             mm +=1
-    # plt.title('Model setup: initial markers \n shows different materials (air, bedrock, ice)')
-    # plt.scatter(markers.x, markers.y, c=markers.id)
-    # plt.xlim(0,xsize)
-    # plt.ylim(0,ysize)
-    # plt.xlabel('distance [m]')
-    # plt.ylabel('height [m]')
-    # plt.show()
+    plt.title('Model setup: initial markers \n shows different materials (air, bedrock, ice)')
+    plt.scatter(markers.x, markers.y, c=markers.id)
+    plt.xlim(0,xsize)
+    plt.ylim(0,ysize)
+    plt.xlabel('distance [m]')
+    plt.ylabel('height [m]')
+    plt.show()
 
 
     
@@ -266,8 +268,8 @@ def initializeModel():
 
     ############################################################################
     # create markers object
-    mnumx = xnum*2#400
-    mnumy = ynum*2#300
+    mnumx = xnum*4#400
+    mnumy = ynum*4#300
     markers = Markers(mnumx, mnumy)
 
     # initialize markers
