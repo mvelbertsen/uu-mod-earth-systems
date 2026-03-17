@@ -12,7 +12,7 @@ jobs:
       - uses: actions/setup-python@v5
       - name: Install dependencies
         run: |
-          pip install sphinx
+          pip install sphinx matplotlib numpy scipy numba
       - name: Build HTML
         run: | 
           sphinx-build docs/source docs/build
