@@ -5,7 +5,7 @@ Simple Stoke's flow test with constant visc, T and vertical density contrast
 """
 import numpy as np
 
-from dataStructures import Markers, Grid, Materials
+from solver.dataStructures import Markers, Grid, Materials
 import pathlib
 from numba import jit, float64, int64
 from numba.experimental import jitclass
@@ -93,7 +93,7 @@ def initializeModel():
 
 
     # instantiate/load material properties object
-    matData = np.loadtxt('./models/simpleStokesTest/material_properties_simple.txt', delimiter=",")
+    matData = np.loadtxt('./material_properties_simple.txt', delimiter=",")
     materials = Materials(matData) 
 
     # output options
@@ -275,6 +275,8 @@ spec_par = [
     ('gx', float64),
     ('gy', float64),
     ('Rgas', float64),
+    ('xsize', float64),
+    ('ysize', float64),
     ('T_min', float64),
     ('v_ext', float64),
     ('eta_min', float64),
@@ -311,6 +313,10 @@ class Parameters():
         y-direction component of gravitational acceleration.
     Rgas : FLOAT
         Ideal gas constant.
+    xsize : FLOAT
+        physical x-size of the grid.
+    ysize : FLOAT
+        physical y-size of the grid.
     T_min : FLOAT
         Minimum allowed temperature.
     v_ext : FLOAT
@@ -376,6 +382,8 @@ class Parameters():
         self.Rgas = 8.314                       # gas constant
         
         # physical model setup
+        self.xsize = 1e5                        # physical x-size of model, m
+        self.ysize = 1.5e5                      # physical y-size of model, m
         self.T_min = 273                        # temperature at the top face of the model (K)
         
         self.v_ext = 0.0                        # extension velocity of the grid (cm/yr)

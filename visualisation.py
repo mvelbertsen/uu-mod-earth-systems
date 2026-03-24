@@ -9,40 +9,6 @@ from matplotlib import figure
 import numpy as np
 from numba import jit
 
-@jit
-def basicGridVelocities(gridvx, gridvy, xnum, ynum):
-    '''
-    Interpolates the velocity values to the basic nodes, for visualisation only.
-
-    Parameters
-    ----------
-    gridvx : ARRAY
-        x-velocities at the staggered computation nodes.
-    gridvy : ARRAY
-        y-velocities at the staggered computation nodes.
-    xnum : INT
-        x-resolution of the simulation domain.
-    ynum : INT
-        y-resolution of the simulation domain.
-
-    Returns
-    -------
-    vxb : ARRAY
-        x-velocities at the basic nodes.
-    vyb : ARRAY
-        y-velocities at the basic nodes.
-
-    '''
-    vxb = np.zeros((ynum, xnum))
-    vyb = np.zeros((ynum, xnum))
-    
-    for i in range(0,ynum):
-        for j in range(0,xnum):
-            vxb[i,j] = (gridvx[i,j] + gridvx[i+1,j])/2
-            vyb[i,j] = (gridvy[i,j] + gridvy[i,j+1])/2
-    
-    return vxb, vyb
-
 
 def plotAVar(grid, vxb, vyb, L_x, L_y, ntstp, t_curr):
     '''

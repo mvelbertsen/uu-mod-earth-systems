@@ -5,7 +5,7 @@ Low level functions for marker calculations, including marker-to-grid/grid-to-ma
 
 """
 import numpy as np
-from dataStructures import Markers, Materials, Grid
+from solver.dataStructures import Markers, Materials, Grid
 from numba import jit
 
 @jit(nopython=True)

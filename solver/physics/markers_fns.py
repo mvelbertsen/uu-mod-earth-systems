@@ -12,8 +12,8 @@ distances, interpolating a value to/from markers, etc. are in markerUtils.
 import numpy as np
 from numba import jit
 
-from dataStructures import Markers, Materials, Grid
-from physics.markerUtils import applyGridContrib, applyMarkerContrib,\
+from solver.dataStructures import Markers, Materials, Grid
+from solver.physics.markerUtils import applyGridContrib, applyMarkerContrib,\
     getMarkerNodeDistances, findNearestNode, applyGridWeights
 
 

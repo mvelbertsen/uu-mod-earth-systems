@@ -9,40 +9,6 @@ from matplotlib import figure
 import numpy as np
 from numba import jit
 
-@jit
-def basicGridVelocities(gridvx, gridvy, xnum, ynum):
-    '''
-    Interpolates the velocity values to the basic nodes, for visualisation only.
-
-    Parameters
-    ----------
-    gridvx : ARRAY
-        x-velocities at the staggered computation nodes.
-    gridvy : ARRAY
-        y-velocities at the staggered computation nodes.
-    xnum : INT
-        x-resolution of the simulation domain.
-    ynum : INT
-        y-resolution of the simulation domain.
-
-    Returns
-    -------
-    vxb : ARRAY
-        x-velocities at the basic nodes.
-    vyb : ARRAY
-        y-velocities at the basic nodes.
-
-    '''
-    vxb = np.zeros((ynum, xnum))
-    vyb = np.zeros((ynum, xnum))
-    
-    for i in range(0,ynum):
-        for j in range(0,xnum):
-            vxb[i,j] = (gridvx[i,j] + gridvx[i+1,j])/2
-            vyb[i,j] = (gridvy[i,j] + gridvy[i,j+1])/2
-    
-    return vxb, vyb
-
 
 def plotAVar(grid, vxb, vyb, L_x, L_y, ntstp, t_curr):
     '''
@@ -78,14 +44,14 @@ def plotAVar(grid, vxb, vyb, L_x, L_y, ntstp, t_curr):
     axs = fig.subplots(1,1, sharex=True, sharey=True)
 
     # plot the temperature as colormap
-    im = axs.pcolor(X, Y, grid.T-273, shading='nearest', vmin=0, vmax=1400)
+    im = axs.pcolor(X, Y, grid.rho, shading='nearest', vmin=3150, vmax=3350)
     fig.colorbar(im, ax=axs,pad=0.0)                                        # display colorbar
-    axs.set_title('Temperature (C)')                                        # set plot title
+    axs.set_title('Density (g/cm^3')                                        # set plot title
     axs.set(ylabel='y (km)', xlabel='x (km)')                               # label the y-axis and x-axis
     axs.invert_yaxis()                                                      # plot increasing depth downward! 
 
     fig.suptitle('Time: %.3f Myr'%(t_curr*1e-6/(365.25*24*3600)))
-    fig.savefig('./Figures/temp_tstp_%i.png'%(ntstp))
+    fig.savefig('./figures/temp_tstp_%i.png'%(ntstp))
 
 
 def plotSeveralVars(grid, vxb, vyb, L_x, L_y, ntstp, t_curr):
@@ -170,7 +136,7 @@ def plotSeveralVars(grid, vxb, vyb, L_x, L_y, ntstp, t_curr):
 
     fig.suptitle('Time: %.3f Myr'%(t_curr*1e-6/(365.25*24*3600)))
     
-    fig.savefig('./Figures/densT_tstp_%i.png'%(ntstp))
+    fig.savefig('./figures/densT_tstp_%i.png'%(ntstp))
 
 
 def plotMarkerFields(xsize, ysize, markers, grid, ntstp, t_curr):
@@ -241,61 +207,8 @@ def plotMarkerFields(xsize, ysize, markers, grid, ntstp, t_curr):
     fig.suptitle('Time: %.3f Myr'%(t_curr*1e-6/(365.25*24*3600)))
     fig.savefig('./Figures/lithology_tstp_%i.png'%(ntstp))
     
-def plotMarkerFields_Lithology(xsize, ysize, markers, grid, ntstp, t_curr):
-    
-    '''
-    Plot the lithology recorded by the markers.
 
-    Parameters
-    ----------
-    xsize : FLOAT
-        Physical x-size of the simulation domain.
-    ysize : FLOAT
-        Physical y-size of the simulation domain.
-    markers : Markers object
-        Contains all the marker values for each variable.
-    grid : Grid object
-        Contains all the grid variables at the current time.
-    ntstp : INT
-        Current timestep number.
-    t_curr : FLOAT
-        Current time (s).
 
-    Returns
-    -------
-    None.
-
-    Not used for this type of model
-
-    '''
-
-def plotMarkerFields2(xsize, ysize, markers, grid, ntstp, t_curr):
-
-    '''
-    Plot the strain rate components and accumulated strain recorded by the markers.
-
-    Parameters
-    ----------
-    xsize : FLOAT
-        Physical x-size of the simulation domain.
-    ysize : FLOAT
-        Physical y-size of the simulation domain.
-    markers : Markers object
-        Contains all the marker values for each variable.
-    grid : Grid object
-        Contains all the grid variables at the current time.
-    ntstp : INT
-        Current timestep number.
-    t_curr : FLOAT
-        Current time (s).
-
-    Returns
-    -------
-    None.
-
-    Also not used for this type of model
-
-    '''
 
 @jit(nopython=True)
 def get_marker_fields_vis(xsize, ysize, markers, grid):
@@ -394,7 +307,37 @@ def get_marker_fields_vis(xsize, ysize, markers, grid):
     return mark_com, mark_gii, mark_sigmaxx
 
 
+def makePlots(grid, vxb, vyb, params, ntstp, t_curr):
+    """
+    Wrapper function which calls all plotting routines, to simplify calling in 
+    the run script.
 
+    Parameters
+    ----------
+    grid : grid Object
+        grid object containing the all the simulation variables on the grid.
+    vxb : ARRAY
+        x-component of velocities interpolated to basic grid nodes.
+    vyb : ARRAY
+        y-component of velocities interpolated to basic grid nodes.
+    params : Parameters object
+        Object containing parameters for the simulation.
+    ntstp: INT
+        Current timestep number
+    t_curr : FLOAT
+        Current simulation time.
+
+    Returns
+    -------
+    None.
+
+    """
+    
+    plotAVar(grid, vxb, vyb, params.xsize, params.ysize, ntstp, t_curr)
+    
+    plotSeveralVars(grid, vxb, vyb,params.xsize, params.ysize, ntstp, t_curr)
+    
+    
 
     
     
