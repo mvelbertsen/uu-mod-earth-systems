@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 
-Example script for running model w. simple Stokes solver and Temoperature test
+Example script for running model w. simple Stokes solver test
 
 """
 
@@ -12,9 +12,9 @@ import os
 import sys
 
 # internal imports
-sys.path.append("../../")
+sys.path.append("../../") # required so that we can find the rest of the code from here
 
-from solver.dataStructures import Markers, Materials, Grid, copyGrid
+from solver.dataStructures import Grid
 from solver.main import step
 from setup import initializeModel, gridSpacings
 from solver.physics.grid_fns import basicGridVelocities
@@ -27,7 +27,7 @@ from visualisation import makePlots
 ###############################################################################
 strt = time()
 
-# if debugging, this should be 1 AND jitclass tags in dataStructures must be commented out!
+# if debugging, this should be 1 AND jitclass tags in solver/dataStructures must be commented out!
 os.environ["NUMBA_DISABLE_JIT"] = "0"
 # if 1 prints out extra statements at various places in the timeloop
 debug = 1
@@ -36,7 +36,7 @@ debug = 1
 ###############################################################################
 # step 1 : initialize the model run
 ###############################################################################
-params, grid, materials, markers, xsize, ysize, P_first, B_top, B_bottom,\
+params, grid, materials, markers, P_first, B_top, B_bottom,\
 B_left, B_right, B_intern, BT_top, BT_bottom, BT_left, BT_right = initializeModel()
 
 # initialize grid0 for old values
@@ -47,7 +47,7 @@ time_curr = 0
 timestep = params.tstp_max
 
 # if figures directory doesn't already exist, add it
-if not os.path.exists("figures/"):
+if (os.path.exists("figures/")==False):
     os.mkdir("figures/")
 
 
@@ -58,7 +58,7 @@ for nt in range(0, params.ntstp_max):
     
     ###########################################################################
     # do a timestep
-    step(params, grid, materials, markers, xsize, ysize, P_first, B_top, B_bottom,\
+    step(params, grid, materials, markers, P_first, B_top, B_bottom,\
     B_left, B_right, B_intern, BT_top, BT_bottom, BT_left, BT_right, timestep, nt, grid0, debug)
 
 
@@ -88,20 +88,19 @@ for nt in range(0, params.ntstp_max):
         print('updating grid spacings')
     
     # update grid positions based on extension
-    ysize += -params.v_ext/xsize*ysize*timestep
-    xsize += params.v_ext*timestep
+    params.ysize += -params.v_ext/params.xsize*params.ysize*timestep
+    params.xsize += params.v_ext*timestep
     
-    g = gridSpacings(params, xsize, ysize, grid, time_curr)
+    g = gridSpacings(params, grid, time_curr)
     
     # if we have changing grid, need to update bottom BC
     if (abs(params.v_ext)>0):
-        B_bottom[:,2] = -params.v_ext/xsize*ysize
+        B_bottom[:,2] = -params.v_ext/params.xsize*params.ysize
         B_bottom[:,3] = 0
     
         
     ###########################################################################
     # exit if final time is reached
-    
     if (time_curr >= params.t_end):
         # we have reached the max time specified, exit loop
         print('t_end reached, exiting loop')

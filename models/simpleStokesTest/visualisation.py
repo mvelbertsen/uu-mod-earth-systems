@@ -104,7 +104,7 @@ def plotSeveralVars(grid, vxb, vyb, L_x, L_y, ntstp, t_curr):
     
     # add velocity arrows, not at every cell, step sets the spacing
     step = 5
-    qu = axs[0].quiver(X[::step, ::step], Y[::step, ::step], vxb[:yres,:][::step, ::step], np.flip(-vyb[:,:xres],0)[::step, ::step])	    
+    axs[0].quiver(X[::step, ::step], Y[::step, ::step], vxb[:yres,:][::step, ::step], np.flip(-vyb[:,:xres],0)[::step, ::step])	    
     
     # Add temperature contours
     cs = axs[0].contour(X, Y, grid.T-273, levels=temp_levels, colors='w', linewidths=0.8)
@@ -205,7 +205,7 @@ def plotMarkerFields(xsize, ysize, markers, grid, ntstp, t_curr):
     axs[2].clabel(cs, inline=True, fontsize=8, fmt='%d C')
 
     fig.suptitle('Time: %.3f Myr'%(t_curr*1e-6/(365.25*24*3600)))
-    fig.savefig('./Figures/lithology_tstp_%i.png'%(ntstp))
+    fig.savefig('./figures/lithology_tstp_%i.png'%(ntstp))
     
 
 
@@ -334,7 +334,6 @@ def makePlots(grid, vxb, vyb, params, ntstp, t_curr):
     """
     
     plotAVar(grid, vxb, vyb, params.xsize, params.ysize, ntstp, t_curr)
-    
     plotSeveralVars(grid, vxb, vyb,params.xsize, params.ysize, ntstp, t_curr)
     
     

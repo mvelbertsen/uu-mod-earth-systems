@@ -9,12 +9,11 @@ from the chosen model directory
 """
 
 import numpy as np
-from numba import jit
 from copy import deepcopy
 
 
 # load the component fucntions from their respective files
-from solver.dataStructures import Markers, Materials, Grid, copyGrid
+from solver.dataStructures import copyGrid
 
 from solver.physics.StokesContinuitySolver import StokesContinuitySolver, constructStokesRHS
 from solver.physics.TemperatureSolver import TemperatureSolver, constructTempRHS
@@ -25,7 +24,7 @@ from solver.physics.grid_fns import updateStresses, viscElastStress, strainRateC
 
 
 
-def step(params, grid, materials, markers, xsize, ysize, P_first, B_top, B_bottom,\
+def step(params, grid, materials, markers, P_first, B_top, B_bottom,\
              B_left, B_right, B_intern, BT_top, BT_bottom, BT_left, BT_right, timestep, ntstp, grid0, debug):
     """
     Performs a timestep of the solver, not including visualisation and grid changes which are model-dependent.
@@ -34,7 +33,6 @@ def step(params, grid, materials, markers, xsize, ysize, P_first, B_top, B_botto
     
     See models/simpleStokes/run.py for example usage.
     
-    Input parameters can be generated with a variant of InitializeModel() edited to reflect your chosen case.
 
     Parameters
     ----------
@@ -112,9 +110,11 @@ def step(params, grid, materials, markers, xsize, ysize, P_first, B_top, B_botto
     xnum = grid.xnum
     ynum = grid.ynum
     
+    
+    
     # compute average step size
-    xstp_av = xsize/(xnum-1)
-    ystp_av = ysize/(ynum-1)
+    xstp_av = params.xsize/(xnum-1)
+    ystp_av = params.ysize/(ynum-1)
     
     
 

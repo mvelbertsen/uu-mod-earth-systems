@@ -81,11 +81,11 @@ def initializeModel():
 
     # additional model options 
     # initial system size
-    xsize0 = 1e5
-    ysize0 = 1.5e5
+    #xsize0 = 1e5
+    #ysize0 = 1.5e5
     
-    xsize = xsize0
-    ysize = ysize0
+    #xsize = xsize0
+    #ysize = ysize0
 
     # set resolution
     xnum = 31
@@ -101,8 +101,8 @@ def initializeModel():
     params.ntstp_max = 20
 
     # create directories for output of figures and data (not atm)
-    pathlib.Path('./Figures').mkdir(exist_ok=True)
-    pathlib.Path('./Output').mkdir(exist_ok=True)
+    #pathlib.Path('./Figures').mkdir(exist_ok=True)
+    #pathlib.Path('./Output').mkdir(exist_ok=True)
 
     ###########################################################################    
     # Boundary conditions
@@ -147,7 +147,7 @@ def initializeModel():
     
 
     # define grid points for (potentially) unevenly spaced grid
-    gridSpacings(params, xsize, ysize, grid, 0)
+    gridSpacings(params, grid, 0)
 
     ############################################################################
     # create markers object
@@ -156,14 +156,14 @@ def initializeModel():
     markers = Markers(mnumx, mnumy)
 
     # initialize markers
-    initialize_markers(markers, materials, params, xsize, ysize)
+    initialize_markers(markers, materials, params)
     
-    return params, grid, materials, markers, xsize, ysize, P_first, B_top, B_bottom,\
+    return params, grid, materials, markers, P_first, B_top, B_bottom,\
            B_left, B_right, B_intern, BT_top, BT_bottom, BT_left, BT_right
            
            
 
-def initialize_markers(markers, materials, params, xsize, ysize):
+def initialize_markers(markers, materials, params):
     '''
     Initialize the positions, material ID and temperature of the markers.
     
@@ -175,10 +175,6 @@ def initialize_markers(markers, materials, params, xsize, ysize):
         Materials object filled from file with the required materials.
     params : Parameters Object
         Contains the simulation parameters
-    xsize : FLOAT
-        Physical x-size of the simulation domain.
-    ysize : FLOAT
-        Physical y-size of the simulation domain.
 
     Returns
     -------
@@ -187,8 +183,8 @@ def initialize_markers(markers, materials, params, xsize, ysize):
     '''
     
     # set the rough grid spacing for the markers
-    mxstp = xsize/markers.xnum
-    mystp = ysize/markers.ynum
+    mxstp = params.xsize/markers.xnum
+    mystp = params.ysize/markers.ynum
     
     # marker number index
     mm = 0
@@ -202,7 +198,7 @@ def initialize_markers(markers, materials, params, xsize, ysize):
             
             # now define rock type based on location, to give our initial setup
             # left-side
-            if (markers.x[mm] <= xsize/2):
+            if (markers.x[mm] <= params.xsize/2):
                 markers.id[mm] = 0
                 markers.T[mm] = 1000
             else:
@@ -214,7 +210,7 @@ def initialize_markers(markers, materials, params, xsize, ysize):
             mm +=1
 
 
-def gridSpacings(params, xsize, ysize, grid, t_curr):
+def gridSpacings(params, grid, t_curr):
     '''
     Calculates the new grid point spacings based on the current xsize and ysize.
     This version contructs a non-uniform grid with a central-upper high resolution region
@@ -224,10 +220,6 @@ def gridSpacings(params, xsize, ysize, grid, t_curr):
     ----------
     params : Parameters Class
         Parameters object containing all simulation parameters for the system.
-    xsize : FLOAT
-        Physical size of the system in x-direction.
-    ysize : FLOAT
-        Physical size of the system in y-direction.
     grid : OBJ
         The grid object into which the new node positions will be written.
     t_curr : FLOAT
@@ -247,8 +239,8 @@ def gridSpacings(params, xsize, ysize, grid, t_curr):
     xnum = grid.xnum
     ynum = grid.ynum
     
-    dx = xsize/(xnum-1)
-    dy = ysize/(ynum-1)
+    dx = params.xsize/(xnum-1)
+    dy = params.ysize/(ynum-1)
     
     
     # Simple, uniform grid
@@ -421,5 +413,6 @@ class Parameters():
         self.const = 1                          # flag which determines whether grid remains constant or not
         
         # output options
+        
         self.save_output = 50                        # number of steps between output files
         self.save_fig = 20                            # number of steps between figure output
