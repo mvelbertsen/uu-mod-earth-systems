@@ -1,4 +1,4 @@
-name: modearth
+name: modearth-project
 channels:
   - defaults
 dependencies:
@@ -7,4 +7,3 @@ dependencies:
   - numpy
   - numba
   - spyder
-  - sphinx
