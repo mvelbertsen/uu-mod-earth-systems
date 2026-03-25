@@ -172,7 +172,7 @@ def step(params, grid, materials, markers, P_first, B_top, B_bottom,\
     if (debug):
         print('marker to grid interp.')
     # interpolate parameters from markers to nodes + compute viscosities
-    markersToGrid(markers, materials, grid, grid0, xnum, ynum, params, timestep, ntstp, plast_y)
+    markersToGrid(markers, materials, grid, grid0, xnum, ynum, params, timestep, ntstp, plast_y, B_intern)
     
     
     # apply thermal BCs for interpolated T

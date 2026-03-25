@@ -172,16 +172,14 @@ def plotSeveralVars(grid, vxb, vyb, L_x, L_y, ntstp, t_curr):
     
     fig.savefig('./Figures/densT_%i.png'%(ntstp))
 
-def plotMarkerFields_Lithology(xsize, ysize, markers, grid, ntstp, t_curr):
+def plotMarkerFields_Lithology(params, markers, grid, ntstp, t_curr):
     '''
     Plot the lithology and accumulated strain recorded by the markers.
 
     Parameters
     ----------
-    xsize : FLOAT
-        Physical x-size of the simulation domain.
-    ysize : FLOAT
-        Physical y-size of the simulation domain.
+    params : Parameters object
+        Simulation's parameters object.
     markers : Markers object
         Contains all the marker values for each variable.
     grid : Grid object
@@ -197,7 +195,7 @@ def plotMarkerFields_Lithology(xsize, ysize, markers, grid, ntstp, t_curr):
 
     '''
     # first calculate a grid of interpolated marker values
-    mark_com, mark_gii, mark_sigmaxx, mark_epsxx, mark_epsxy, mark_epsii, mark_sigmaii, mark_sigmaxy = get_marker_fields_vis(xsize, ysize, markers, grid)
+    mark_com, mark_gii, mark_sigmaxx, mark_epsxx, mark_epsxy, mark_epsii, mark_sigmaii, mark_sigmaxy = get_marker_fields_vis(params.xsize, params.ysize, markers, grid)
 
     # create figure
     fig = figure.Figure(figsize=(9,3), constrained_layout=True)
@@ -208,13 +206,13 @@ def plotMarkerFields_Lithology(xsize, ysize, markers, grid, ntstp, t_curr):
     temp_levels = [100, 150, 350, 450, 1300]
 
     # plot the lithology as colormap
-    im = axs.imshow(mark_com, origin='upper', aspect='auto', extent=[0,xsize,ysize,0])
+    im = axs.imshow(mark_com, origin='upper', aspect='auto', extent=[0,params.xsize,params.ysize,0])
     fig.colorbar(im, ax=axs,pad=0.0)                                                 # display colorbar
     axs.set_title('Lithology')                                                       # set plot title
-    axs.set(ylabel='y (m)', xlabel ='x (m)', xlim=(0e3, 550e3), ylim=(300e3, 0))                                         # labels, limits                        
+    axs.set(ylabel='y (m)', xlabel ='x (m)', xlim=(0e3, 550e3), ylim=(300e3, 0))     # labels, limits                        
     
     fig.suptitle('Time: %.3f Myr'%(t_curr*1e-6/(365.25*24*3600)))
-    fig.savefig('./Figures/litho_%i.png'%(ntstp))
+    fig.savefig(f'./figures/{params.output_name}/litho_%i.png'%(ntstp))
 
 
 def plotMarkerFields(xsize, ysize, markers, grid, ntstp, t_curr):
@@ -473,6 +471,35 @@ def get_marker_fields_vis(xsize, ysize, markers, grid):
 
 
 
+def makePlots(grid, vxb, vyb, params, ntstp, t_curr):
+    """
+    Wrapper function which calls all plotting routines, to simplify calling in 
+    the run script.
+
+    Parameters
+    ----------
+    grid : grid Object
+        grid object containing the all the simulation variables on the grid.
+    vxb : ARRAY
+        x-component of velocities interpolated to basic grid nodes.
+    vyb : ARRAY
+        y-component of velocities interpolated to basic grid nodes.
+    params : Parameters object
+        Object containing parameters for the simulation.
+    ntstp: INT
+        Current timestep number
+    t_curr : FLOAT
+        Current simulation time.
+
+    Returns
+    -------
+    None.
+
+    """
+    
+    plotAVar(grid, vxb, vyb, params, ntstp, t_curr)
+    plotSeveralVars(grid, vxb, vyb, params, ntstp, t_curr)
+    
 
     
     

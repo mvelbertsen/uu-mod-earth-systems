@@ -18,7 +18,7 @@ from solver.physics.markerUtils import applyGridContrib, applyMarkerContrib,\
 
 
 @jit(nopython=True)
-def markersToGrid(markers, materials, grid, grid0, xnum, ynum, params, tstep, ntstp, plast_y):
+def markersToGrid(markers, materials, grid, grid0, xnum, ynum, params, tstep, ntstp, plast_y, B_intern):
     '''
     Reads or calculates the marker values for density, thermal quantities, viscosity, stresses, mu
     and interpolates them to the grid.  This is called at the beginning of each timestep to update the
@@ -46,6 +46,9 @@ def markersToGrid(markers, materials, grid, grid0, xnum, ynum, params, tstep, nt
         Current timestep number.
     plast_y : INT
         Flag to indicate whether plastic yielding has occured, will be updated by this function.
+    B_intern : ARRAY
+        Array that sets the optional internal velocity boundary wall, this is often used with a 
+        high viscosity region which is set in this function.
 
     Returns
     -------
@@ -102,7 +105,7 @@ def markersToGrid(markers, materials, grid, grid0, xnum, ynum, params, tstep, nt
             
             ###################################################################
             # compute marker viscosity
-            m_eta = markerViscosity(markers, materials, m, grid, params, ntstp, tstep, plast_y)
+            m_eta = markerViscosity(markers, materials, m, grid, params, ntstp, tstep, plast_y, B_intern)
             
             # compute 1/mu
             m_mu = 1/materials.mu[markers.id[m]]
@@ -126,7 +129,7 @@ def markersToGrid(markers, materials, grid, grid0, xnum, ynum, params, tstep, nt
 
     
 @jit(nopython=True)
-def markerViscosity(markers, materials, m, grid, params, ntstp, tstep, plast_y):
+def markerViscosity(markers, materials, m, grid, params, ntstp, tstep, plast_y, B_intern):
     '''
     Calculates the viscosity of a marker based on its material type.
 
@@ -155,13 +158,20 @@ def markerViscosity(markers, materials, m, grid, params, ntstp, tstep, plast_y):
         Calculated marker viscosity value.
 
     '''
+
     mID = markers.id[m]
+
     
     if (materials.visc[mID, 0] < 1e-11):
         # constant viscosity
         m_eta = materials.visc[mID, 1]
-        # High constant viscosity at internal boundary 
-    elif (markers.x[m] > 550000 and markers.x[m] < 610000 and markers.y[m] > 30000 and markers.y[m] < 60000):
+    
+    # Optional high constant viscosity at internal boundary 
+    elif (params.viscbox==1 and markers.x[m] > grid.x[int(B_intern[0])] - params.viscbox_xpos*params.viscbox_xsize\
+                            and markers.x[m] < grid.x[int(B_intern[0])] + (1-params.viscbox_xpos)*params.viscbox_xsize\
+                            and markers.y[m] > 0.5*(grid.y[int(B_intern[2])] + grid.y[int(B_intern[1])])-0.5*params.viscbox_ysize\
+                            and markers.y[m] < 0.5*(grid.y[int(B_intern[2])] + grid.y[int(B_intern[1])])+0.5*params.viscbox_ysize):
+        
         m_eta = 1e28
     else:
         # power law viscosity

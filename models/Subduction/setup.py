@@ -6,15 +6,17 @@ File which contains the setup for a Subduction model
 """
 
 import numpy as np
-import pathlib
-import math
-from numba import jit, float64, int64
+import math # TODO: can this be done w. numpy?
+
+
+from numba import float64, int64
+from numba.types import unicode_type
 from numba.experimental import jitclass
 
-from dataStructures import Markers, Grid, Materials
+from solver.dataStructures import Markers, Grid, Materials
 
 
-def initialize_markers(markers, materials, params, xsize, ysize):
+def initialize_markers(markers, materials, params):
     '''
     Initialize the positions, material ID and temperature of the markers.
 
@@ -26,10 +28,7 @@ def initialize_markers(markers, materials, params, xsize, ysize):
         Materials object filled from file with the required materials.
     params : Parameters Object
         Contains the simulation parameters
-    xsize : FLOAT
-        Physical x-size of the simulation domain.
-    ysize : FLOAT
-        Physical y-size of the simulation domain.
+
 
     Returns
     -------
@@ -39,8 +38,8 @@ def initialize_markers(markers, materials, params, xsize, ysize):
     
     np.random.seed(1337)
     # set the rough grid spacing for the markers
-    mxstp = xsize/markers.xnum
-    mystp = ysize/markers.ynum
+    mxstp = params.xsize/markers.xnum
+    mystp = params.ysize/markers.ynum
     
     # marker number index
     mm = 0
@@ -104,7 +103,7 @@ def initialize_markers(markers, materials, params, xsize, ysize):
             # initial temperature structure
             # adiabatic T gradient in asthenosphere
             dtdy = 0.5/1000 # K/m
-            markers.T[mm] = params.T_bot - dtdy*(ysize - markers.y[mm])
+            markers.T[mm] = params.T_bot - dtdy*(params.ysize - markers.y[mm])
             
             # if in the air
             if (markers.id[mm]==0):
@@ -114,7 +113,7 @@ def initialize_markers(markers, materials, params, xsize, ysize):
 	        # Oceanic geotherm
             age = 3e7*(365.25*24*3600)      #Oceanic plate age, s
             y_asth = 92000   	           #Bottom of the lithosphere
-            T_asth = params.T_bot - dtdy*(ysize - y_asth)  # T of astenosphere at y=yast
+            T_asth = params.T_bot - dtdy*(params.ysize - y_asth)  # T of astenosphere at y=yast
             kappa = 1e-6		     # Thermal diffusivity of the mantle, m^2/s
     
 	        # After Turcotte & Schubert (2002) 
@@ -158,10 +157,6 @@ def initializeModel():
         Materials object initialsed with required material properties.
     markers : Markers
         Initialized markers object.
-    xsize : INT
-        x-resolution of model domain.
-    ysize : INT
-        y-resolution of model domain.
     P_first : ARRAY
         Array with 2 entries, specifying pressure BC.
     B_top : ARRAY
@@ -211,13 +206,6 @@ def initializeModel():
     # instantiate a pre-populated parameters object
     params = Parameters()
 
-    # additional model options 
-    # initial system size
-    xsize0 = 880000
-    ysize0 = 320000
-    
-    xsize = xsize0
-    ysize = ysize0
 
     # set resolution
     xnum = 104+7
@@ -226,12 +214,9 @@ def initializeModel():
 
     # instantiate/load material properties object
     # file path must be from top directory (as that is where the fn is called from!)
-    matData = np.loadtxt('./models/Subduction/material_properties.txt', skiprows=3, delimiter=",")
+    matData = np.loadtxt('./material_properties.txt', skiprows=3, delimiter=",")
     materials = Materials(matData)
 
-    # create directories for output of figures and data (not atm)
-    pathlib.Path('./Figures').mkdir(exist_ok=True)
-    pathlib.Path('./Output').mkdir(exist_ok=True)
 
     ###########################################################################    
     # Boundary conditions
@@ -254,7 +239,7 @@ def initializeModel():
     B_right[:,0] = 0 
     B_right[:,3] = 1
 
-    # optional internal boundary, switched off
+    # optional internal boundary
     B_intern = np.zeros(8)
     B_intern[0] = 102
     B_intern[1] = 20
@@ -263,7 +248,8 @@ def initializeModel():
     B_intern[4] = -1 
     B_intern[5] = 0
     B_intern[6] = 0
-    B_intern[7] = 0  
+    B_intern[7] = 0
+    
 
     # temperature BCs
     BT_top = np.zeros((xnum, 2))
@@ -284,7 +270,10 @@ def initializeModel():
     grid = Grid(xnum, ynum)
 
     # define grid points for (potentially) unevenly spaced grid
-    g = gridSpacings(params, xsize, ysize, grid, 0)
+    updateGrid(params, grid, 0, params.tstp_max, B_bottom)
+    
+    # TODO: check that if viscbox is in use the internal wall is inside it!
+    
 
     ############################################################################
     # create markers object
@@ -293,33 +282,32 @@ def initializeModel():
     markers = Markers(mnumx, mnumy)
 
     # initialize markers
-    initialize_markers(markers, materials, params, xsize, ysize)
+    initialize_markers(markers, materials, params)
     
-    return params, grid, materials, markers, xsize, ysize, P_first, B_top, B_bottom,\
+    return params, grid, materials, markers, P_first, B_top, B_bottom,\
            B_left, B_right, B_intern, BT_top, BT_bottom, BT_left, BT_right
     
 
 
 
-def gridSpacings(params, xsize, ysize, grid, t_curr):
+def updateGrid(params, grid, t_curr, timestep, BC_bot):
     '''
     Calculates the new grid point spacings based on the current xsize and ysize.
-    This version contructs a non-uniform grid with a central-upper high resolution region
-    and decreasing resolution outward from this.
 
     Parameters
     ----------
     params : Parameters Class
         Parameters object containing all simulation parameters for the system.
-    xsize : FLOAT
-        Physical size of the system in x-direction.
-    ysize : FLOAT
-        Physical size of the system in y-direction.
     grid : OBJ
         The grid object into which the new node positions will be written.
     t_curr : FLOAT
         The current simulation time, to determine whether to set up grid from scratch
         or extend an existing one.
+    timestep : FLOAT
+        The current timestep size.
+    BC_bot : ARRAY
+        The boundary condition which should also be updated by whatever changes
+        are made to the grid, in this case the bottom.
 
     Returns
     -------
@@ -329,7 +317,7 @@ def gridSpacings(params, xsize, ysize, grid, t_curr):
     
     if (t_curr > 0 and params.const==1):
         # we don't need to recalculate the grid, return here!
-        return 0
+        return
     
     xnum = grid.xnum
     ynum = grid.ynum
@@ -350,7 +338,7 @@ def gridSpacings(params, xsize, ysize, grid, t_curr):
     # Horizontal grid
     
     # xsize - region of fixed grid at the end
-    xsize_norm = xsize - N_end*b_end
+    xsize_norm = params.xsize - N_end*b_end
     
     # grid point number at which the non-uniform grid ends
     xnum_ad = xnum - N_end
@@ -367,11 +355,19 @@ def gridSpacings(params, xsize, ysize, grid, t_curr):
 
     else:
         
+        # update grid positions based on extension
+        params.ysize += -params.v_ext/params.xsize*params.ysize*timestep
+        params.xsize += params.v_ext*timestep
+        
         # set the new position of the first node,
         # and the size of the non-uniform region
-        grid.x[0] = grid.x[int(xnum/2)] - xsize/2
-        D = xsize/2 - (grid.x[xnum-Nx-1] - grid.x[int(xnum/2)])
+        grid.x[0] = grid.x[int(xnum/2)] - params.xsize/2
+        D = params.xsize/2 - (grid.x[xnum-Nx-1] - grid.x[int(xnum/2)])
         
+        # if we have changing grid, we also need to update bottom BC
+        if (abs(params.v_ext)>0):
+            BC_bot[:,2] = -params.v_ext/params.xsize*params.ysize
+            BC_bot[:,3] = 0
     
     # define factor of grid spacing to increase to the right of high res area
     # need to only do this for non-uniform def, otherwise div by 0!
@@ -390,7 +386,7 @@ def gridSpacings(params, xsize, ysize, grid, t_curr):
             grid.x[i] = grid.x[i-1] + b_end
         
         if (t_curr==0):
-            grid.x[xnum-1] = xsize
+            grid.x[xnum-1] = params.xsize
             grid.x[xnum_ad-1] = xsize_norm
     
         # now do the same going leftward
@@ -409,7 +405,7 @@ def gridSpacings(params, xsize, ysize, grid, t_curr):
     # one-sided, there is high resolution at the top of the grid and then a decreasing region below
 
     # ysize - region of fixed grid at the end
-    ysize_norm = ysize - Ny_end*by_end
+    ysize_norm = params.ysize - Ny_end*by_end
 
     # grid point number at which the non-uniform grid ends
     ynum_ad = ynum - Ny_end
@@ -436,17 +432,17 @@ def gridSpacings(params, xsize, ysize, grid, t_curr):
 
         # fix the end position if this is the first step
         if (t_curr==0):
-            grid.y[ynum-1] = ysize
+            grid.y[ynum-1] = params.ysize
             grid.y[ynum_ad-1] = ysize_norm
 
-    # need a return statement, since we conditionally return early if the grid is constant
-    return 1
 
 
 spec_par = [
     ('gx', float64),
     ('gy', float64),
     ('Rgas', float64),
+    ('xsize', float64),
+    ('ysize', float64),
     ('T_min', float64),
     ('T_top', float64),
     ('T_bot', float64),
@@ -479,6 +475,11 @@ spec_par = [
     ('by_end', float64),
     ('save_output', int64),
     ('save_fig', int64),
+    ('output_name', unicode_type),
+    ('viscbox', int64),
+    ('viscbox_xsize', float64),
+    ('viscbox_ysize', float64),
+    ('viscbox_xpos', float64)
 ]
 @jitclass(spec_par)
 class Parameters():
@@ -495,6 +496,10 @@ class Parameters():
         y-direction component of gravitational acceleration.
     Rgas : FLOAT
         Ideal gas constant.
+    xsize : FLOAT
+        physical x-size of the grid.
+    ysize : FLOAT
+        physical y-size of the grid.
     T_min : FLOAT
         Minimum allowed temperature.
     T_top : FLOAT
@@ -558,7 +563,19 @@ class Parameters():
         Number of steps between output, not currently implemented.
     save_fig : INT
         Number of steps between plotting of figures.
-    
+    output_name : STR
+        The name of the folder to write the output/figures to.  This will be located
+        in models/{chosen_model}/figures/output_name.
+    viscbox : INT
+        Flag which indicates if the model is using the high viscosity boxb feature.
+    viscbox_xsize : FLOAT
+        x direction physical size of the high viscosity box, used with internal 
+        velocity wall to drive subduction.
+    viscbox_ysize : FLOAT
+        y direction physical size of the high viscosity box, used with internal 
+        velocity wall to drive subduction.
+    viscbox_xpos : FLOAT
+        relative distance along the box where the wall is positioned.
     
     '''
     
@@ -581,6 +598,9 @@ class Parameters():
         self.Rgas = 8.314                       # gas constant
         
         # physical model setup
+        self.xsize = 880000
+        self.ysize = 320000
+        
         self.T_min = 273                        # Minimum allowed temperature in the simulation
         self.T_top = self.T_min                 # temperature at the top face of the model (K)
         self.T_bot = 1825                       # temperature at the bottom face of the model (K)
@@ -632,7 +652,13 @@ class Parameters():
         # output options
         self.save_output = 50                    # number of steps between output files
         self.save_fig = 12                       # number of steps between figure output    
-    
+        self.output_name = "subductionBase"
+        
+        # high viscosity box parameters
+        self.viscbox = 1
+        self.viscbox_xsize = 60000
+        self.viscbox_ysize = 30000
+        self.viscbox_xpos = 0.1666    
     
 
 

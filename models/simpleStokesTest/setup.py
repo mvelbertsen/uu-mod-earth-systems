@@ -6,7 +6,7 @@ Simple Stoke's flow test with constant visc, T and vertical density contrast
 import numpy as np
 
 from solver.dataStructures import Markers, Grid, Materials
-from numba import jit, float64, int64
+from numba import float64, int64
 from numba.types import unicode_type
 from numba.experimental import jitclass
 
@@ -222,7 +222,7 @@ def updateGrid(params, grid, t_curr, timestep, BC_bot):
     
     if (t_curr > 0 and params.const==1):
         # we don't need to recalculate the grid, return here!
-        return 0
+        return
     
     xnum = grid.xnum
     ynum = grid.ynum
