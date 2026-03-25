@@ -10,7 +10,7 @@ import numpy as np
 from numba import jit
 
 
-def plotAVar(grid, vxb, vyb, L_x, L_y, ntstp, t_curr):
+def plotAVar(grid, vxb, vyb, params, ntstp, t_curr):
     '''
     Plot a single variable as a colormap.
 
@@ -22,10 +22,8 @@ def plotAVar(grid, vxb, vyb, L_x, L_y, ntstp, t_curr):
         x velocities interpolated to the basic nodes.
     vyb : ARRAY
         y-velocities interpolated to the basic nodes.
-    L_x : ARRAY
-        Physical x-size of the simulation domain.
-    L_y : ARRAY
-        Physical y-size of the simulation domain.
+    params : Parameters object
+        Simulation's parameters object
     ntstp : INT
         Current timestep number.
     t_curr : FLOAT
@@ -51,10 +49,10 @@ def plotAVar(grid, vxb, vyb, L_x, L_y, ntstp, t_curr):
     axs.invert_yaxis()                                                      # plot increasing depth downward! 
 
     fig.suptitle('Time: %.3f Myr'%(t_curr*1e-6/(365.25*24*3600)))
-    fig.savefig('./figures/temp_tstp_%i.png'%(ntstp))
+    fig.savefig(f'./figures/{params.output_name}/temp_tstp_%i.png'%(ntstp))
 
 
-def plotSeveralVars(grid, vxb, vyb, L_x, L_y, ntstp, t_curr):
+def plotSeveralVars(grid, vxb, vyb, params, ntstp, t_curr):
     '''
     Plot several different grid variables as colourmaps, default is 3x2 grid of plots.
 
@@ -66,10 +64,8 @@ def plotSeveralVars(grid, vxb, vyb, L_x, L_y, ntstp, t_curr):
         x velocities interpolated to the basic nodes.
     vyb : ARRAY
         y-velocities interpolated to the basic nodes.
-    L_x : FLOAT
-        Physical x-size of the simulation domain.
-    L_y : FLOAT
-        Physical y-size of the simulation domain.
+    params : Parameters object
+        Simulation's parameters object.
     ntstp : INT
         Current timestep number.
     t_curr : FLOAT
@@ -135,20 +131,17 @@ def plotSeveralVars(grid, vxb, vyb, L_x, L_y, ntstp, t_curr):
 
 
     fig.suptitle('Time: %.3f Myr'%(t_curr*1e-6/(365.25*24*3600)))
-    
-    fig.savefig('./figures/densT_tstp_%i.png'%(ntstp))
+    fig.savefig('./figures/%s/densT_tstp_%i.png'%(params.output_name, ntstp))
 
 
-def plotMarkerFields(xsize, ysize, markers, grid, ntstp, t_curr):
+def plotMarkerFields(params, markers, grid, ntstp, t_curr):
     '''
     Plot the lithology and accumulated strain recorded by the markers.
 
     Parameters
     ----------
-    xsize : FLOAT
-        Physical x-size of the simulation domain.
-    ysize : FLOAT
-        Physical y-size of the simulation domain.
+    params : Parameters object
+        Simulation's parameters object.
     markers : Markers object
         Contains all the marker values for each variable.
     grid : Grid object
@@ -164,7 +157,7 @@ def plotMarkerFields(xsize, ysize, markers, grid, ntstp, t_curr):
 
     '''
     # first calculate a grid of interpolated marker values
-    mark_com, mark_gii, mark_sigmaxx = get_marker_fields_vis(xsize, ysize, markers, grid)
+    mark_com, mark_gii, mark_sigmaxx = get_marker_fields_vis(params.xsize, params.ysize, markers, grid)
     
     # create figure, subplots
     fig = figure.Figure(figsize=(18,18), constrained_layout=True)
@@ -175,7 +168,7 @@ def plotMarkerFields(xsize, ysize, markers, grid, ntstp, t_curr):
     temp_levels = [100, 150, 350, 450, 1300]
 
     # plot the lithology as colormap
-    im = axs[0].imshow(mark_com, origin='upper', aspect='auto', extent=[0,xsize,ysize,0])
+    im = axs[0].imshow(mark_com, origin='upper', aspect='auto', extent=[0,params.xsize,params.ysize,0])
     fig.colorbar(im, ax=axs[0],pad=0.0)                                                 # display colorbar
     axs[0].set_title('Lithology')                                                       # set plot title
     axs[0].set(ylabel='y (m)', xlim=(0e3, 600e3), ylim=(200e3, 0))                      # labels, limits
@@ -185,7 +178,7 @@ def plotMarkerFields(xsize, ysize, markers, grid, ntstp, t_curr):
     axs[0].clabel(cs, inline=True, fontsize=8, fmt='%d C')                     
     
     # plot accumulated strain 
-    im = axs[1].imshow(np.log10(mark_gii), origin='upper', aspect='auto', extent=[0,xsize,ysize,0], vmin=-2, vmax=2)
+    im = axs[1].imshow(np.log10(mark_gii), origin='upper', aspect='auto', extent=[0,params.xsize,params.ysize,0], vmin=-2, vmax=2)
     fig.colorbar(im, ax=axs[1],pad=0.0)                                                 # display colorbar
     axs[1].set_title('Strain')                                                          # set plot title
     axs[1].set(ylabel = 'y (m)',  xlim=(0e3, 600e3), ylim=(200e3, 0))                   # labels, limits
@@ -195,7 +188,7 @@ def plotMarkerFields(xsize, ysize, markers, grid, ntstp, t_curr):
     axs[1].clabel(cs, inline=True, fontsize=8, fmt='%d C')
     
     # plot normal stress components
-    im = axs[2].imshow(mark_sigmaxx, origin='upper', aspect='auto', extent=[0,xsize,ysize,0])
+    im = axs[2].imshow(mark_sigmaxx, origin='upper', aspect='auto', extent=[0,params.xsize,params.ysize,0])
     fig.colorbar(im, ax=axs[2],pad=0.0)                                                 # display colorbar
     axs[2].set_title('Normal stress (Pa)')                                              # set plot title
     axs[2].set(xlabel='x (m)', ylabel = 'y (m)',  xlim=(0e3, 600e3), ylim=(200e3, 0))   # labels, limits
@@ -205,7 +198,7 @@ def plotMarkerFields(xsize, ysize, markers, grid, ntstp, t_curr):
     axs[2].clabel(cs, inline=True, fontsize=8, fmt='%d C')
 
     fig.suptitle('Time: %.3f Myr'%(t_curr*1e-6/(365.25*24*3600)))
-    fig.savefig('./figures/lithology_tstp_%i.png'%(ntstp))
+    fig.savefig('./figures/%s/lithology_tstp_%i.png'%(params.output_name, ntstp))
     
 
 
@@ -333,8 +326,8 @@ def makePlots(grid, vxb, vyb, params, ntstp, t_curr):
 
     """
     
-    plotAVar(grid, vxb, vyb, params.xsize, params.ysize, ntstp, t_curr)
-    plotSeveralVars(grid, vxb, vyb,params.xsize, params.ysize, ntstp, t_curr)
+    plotAVar(grid, vxb, vyb, params, ntstp, t_curr)
+    plotSeveralVars(grid, vxb, vyb, params, ntstp, t_curr)
     
     
 

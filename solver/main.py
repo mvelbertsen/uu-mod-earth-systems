@@ -44,10 +44,6 @@ def step(params, grid, materials, markers, P_first, B_top, B_bottom,\
         Initialised materials object.
     markers : Markers object
         Initialized markers object.
-    xsize : INT
-        x-resolution of model domain.
-    ysize : INT
-        y-resolution of model domain.
     P_first : ARRAY
         Array with 2 entries, specifying pressure BC.
     B_top : ARRAY

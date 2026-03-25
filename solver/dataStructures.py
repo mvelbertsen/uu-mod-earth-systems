@@ -344,7 +344,6 @@ class Grid():
     ystpc : ARRAY
         centered node y spacings
         
-    
     '''
     
     

@@ -6,8 +6,8 @@ Simple Stoke's flow test with constant visc, T and vertical density contrast
 import numpy as np
 
 from solver.dataStructures import Markers, Grid, Materials
-import pathlib
 from numba import jit, float64, int64
+from numba.types import unicode_type
 from numba.experimental import jitclass
 
 def initializeModel():
@@ -24,10 +24,6 @@ def initializeModel():
         Materials object initialsed with required material properties.
     markers : Markers
         Initialized markers object.
-    xsize : INT
-        x-resolution of model domain.
-    ysize : INT
-        y-resolution of model domain.
     P_first : ARRAY
         Array with 2 entries, specifying pressure BC.
     B_top : ARRAY
@@ -77,15 +73,7 @@ def initializeModel():
     params = Parameters()
     
     params.v_ext = 0.0
-    
 
-    # additional model options 
-    # initial system size
-    #xsize0 = 1e5
-    #ysize0 = 1.5e5
-    
-    #xsize = xsize0
-    #ysize = ysize0
 
     # set resolution
     xnum = 31
@@ -94,15 +82,12 @@ def initializeModel():
 
     # instantiate/load material properties object
     matData = np.loadtxt('./material_properties_simple.txt', delimiter=",")
-    materials = Materials(matData) 
+    materials = Materials(matData)
 
     # output options
     params.save_fig = 2
     params.ntstp_max = 20
 
-    # create directories for output of figures and data (not atm)
-    #pathlib.Path('./Figures').mkdir(exist_ok=True)
-    #pathlib.Path('./Output').mkdir(exist_ok=True)
 
     ###########################################################################    
     # Boundary conditions
@@ -147,7 +132,7 @@ def initializeModel():
     
 
     # define grid points for (potentially) unevenly spaced grid
-    gridSpacings(params, grid, 0)
+    updateGrid(params, grid, 0, params.tstp_max, B_bottom)
 
     ############################################################################
     # create markers object
@@ -210,11 +195,9 @@ def initialize_markers(markers, materials, params):
             mm +=1
 
 
-def gridSpacings(params, grid, t_curr):
+def updateGrid(params, grid, t_curr, timestep, BC_bot):
     '''
     Calculates the new grid point spacings based on the current xsize and ysize.
-    This version contructs a non-uniform grid with a central-upper high resolution region
-    and decreasing resolution outward from this.
 
     Parameters
     ----------
@@ -225,6 +208,11 @@ def gridSpacings(params, grid, t_curr):
     t_curr : FLOAT
         The current simulation time, to determine whether to set up grid from scratch
         or extend an existing one.
+    timestep : FLOAT
+        The current timestep size.
+    BC_bot : ARRAY
+        The boundary condition which should also be updated by whatever changes
+        are made to the grid, in this case the bottom.
 
     Returns
     -------
@@ -255,6 +243,16 @@ def gridSpacings(params, grid, t_curr):
         grid.y[0] = 0
         for i in range(1,ynum):
             grid.y[i] = grid.y[i-1] + dy
+            
+    else:
+        # update grid positions based on extension
+        params.ysize += -params.v_ext/params.xsize*params.ysize*timestep
+        params.xsize += params.v_ext*timestep
+        
+        # if we have changing grid, need to update bottom BC
+        if (abs(params.v_ext)>0):
+            BC_bot[:,2] = -params.v_ext/params.xsize*params.ysize
+            BC_bot[:,3] = 0
     
     if (params.const==0):
         raise ValueError('Moving, uniform grid is not implemented!')
@@ -290,6 +288,7 @@ spec_par = [
     ('const', int64),
     ('save_output', int64),
     ('save_fig', int64),
+    ('output_name', unicode_type)
 ]
 @jitclass(spec_par)
 class Parameters():
@@ -349,6 +348,9 @@ class Parameters():
         Number of steps between output, not currently implemented.
     save_fig : INT
         Number of steps between plotting of figures.
+    output_name : STR
+        The name of the folder to write the output/figures to.  This will be located
+        in models/{chosen_model}/figures/output_name.
     
     
     '''
@@ -414,5 +416,6 @@ class Parameters():
         
         # output options
         
-        self.save_output = 50                        # number of steps between output files
-        self.save_fig = 20                            # number of steps between figure output
+        self.save_output = 50                   # number of steps between output files
+        self.save_fig = 20                      # number of steps between figure output
+        self.output_name = "simpleStokes"       # name of the folder to write data to (within the main figures directory)
