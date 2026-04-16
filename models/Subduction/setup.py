@@ -207,13 +207,13 @@ def initializeModel():
     params = Parameters()
 
 
-    # set resolution
+    # set resolution of the grid
     xnum = 104+7
     ynum = 35+3
 
 
     # instantiate/load material properties object
-    # file path must be from top directory (as that is where the fn is called from!)
+    # file path must be relative to run.py file
     matData = np.loadtxt('./material_properties.txt', skiprows=3, delimiter=",")
     materials = Materials(matData)
 
@@ -276,7 +276,7 @@ def initializeModel():
     
 
     ############################################################################
-    # create markers object
+    # create markers
     mnumx = 550
     mnumy = 510
     markers = Markers(mnumx, mnumy)

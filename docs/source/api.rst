@@ -6,11 +6,12 @@ API
    :template: custom_module.rst
    :recursive:
    
-   dataStructures
-   physics.markers_fns
-   physics.grid_fns
-   physics.markerUtils
-   physics.StokesContinuitySolver
-   physics.TemperatureSolver
-   visualisation
-   models.lithosphereExtension.setup
+   solver.dataStructures
+   solver.physics.markers_fns
+   solver.physics.grid_fns
+   solver.physics.markerUtils
+   solver.physics.StokesContinuitySolver
+   solver.physics.TemperatureSolver
+   solver.main
+   output.visualisation
+   models.Subduction.setup
