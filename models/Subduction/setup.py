@@ -476,6 +476,7 @@ spec_par = [
     ('save_output', int64),
     ('save_fig', int64),
     ('output_name', unicode_type),
+    ('output_path', unicode_type),
     ('viscbox', int64),
     ('viscbox_xsize', float64),
     ('viscbox_ysize', float64),
@@ -565,7 +566,9 @@ class Parameters():
         Number of steps between plotting of figures.
     output_name : STR
         The name of the folder to write the output/figures to.  This will be located
-        in models/{chosen_model}/figures/output_name.
+        in {output_path}/{output_name}.
+    output_path : STR
+        The output path where the result should be written to specified relative to the run.py file's location.
     viscbox : INT
         Flag which indicates if the model is using the high viscosity boxb feature.
     viscbox_xsize : FLOAT
@@ -653,6 +656,7 @@ class Parameters():
         self.save_output = 50                    # number of steps between output files
         self.save_fig = 12                       # number of steps between figure output    
         self.output_name = "subductionBase"
+        self.output_path = "../../Results/figures"
         
         # high viscosity box parameters
         self.viscbox = 1

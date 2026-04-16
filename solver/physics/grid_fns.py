@@ -129,6 +129,7 @@ def strainRateComps(grid, xnum, ynum):
                                     + grid.epsxy[i,j]**2)/4) 
 
 
+
 @jit(nopython=True)
 def basicGridVelocities(gridvx, gridvy, xnum, ynum):
     '''

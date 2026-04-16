@@ -15,9 +15,8 @@ import sys
 sys.path.append("../../") # required so that we can find the rest of the code from here!
 from solver.dataStructures import Grid
 from solver.main import step
-from setup import initializeModel
-from solver.physics.grid_fns import basicGridVelocities
-from visualisation import makePlots, plotMarkerFields_Lithology
+from setup import initializeModel, updateGrid
+from visualisation import makePlots
 
 
 ###############################################################################
@@ -45,12 +44,16 @@ grid0 = Grid(grid.xnum, grid.ynum)
 time_curr = 0
 timestep = params.tstp_max
 
-# if figures directory doesn't already exist, add it
-if (os.path.exists(f"figures/{params.output_name}")==False):
-    os.makedirs(f"figures/{params.output_name}")
+# create path to write directory
 
-#TODO change to makePlots
-plotMarkerFields_Lithology(params, markers, grid, 0.0, 0.0)
+# if figures directory doesn't already exist, add it
+if (os.path.exists(f"{params.output_path}/{params.output_name}")==False):
+    os.makedirs(f"{params.output_path}/{params.output_name}")
+    
+    
+
+#TODO output initial state with makePlots
+
 
 ###############################################################################
 # step 2: time loop
@@ -69,10 +72,10 @@ for nt in range(0, params.ntstp_max):
         print('plotting')
         
         # interpolate vx, vy for basic grid
-        vxb, vyb = basicGridVelocities(grid.vx, grid.vy, grid.xnum, grid.ynum)
+        # vxb, vyb = basicGridVelocities(grid.vx, grid.vy, grid.xnum, grid.ynum)
         
         # wrapper for calling whatever custom plots are defined in setup.py
-        makePlots(grid, vxb, vyb, params, nt, time_curr)
+        makePlots(grid, markers, params, nt, time_curr)
         
 
     ###########################################################################
@@ -85,7 +88,7 @@ for nt in range(0, params.ntstp_max):
     ###########################################################################
     # Make any model-specific adjustments 
     # eg. for a moving grid, update the grid positions
-
+    updateGrid(params, grid, time_curr, timestep, B_bottom)
     
         
     ###########################################################################
