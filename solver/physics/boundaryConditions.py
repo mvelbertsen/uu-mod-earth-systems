@@ -6,21 +6,23 @@ Boundary Conditions
 """
 
 import numpy as np
-from numba import float64
+from numba import float64, int64
 from numba.experimental import jitclass
 
 
 spec_BC = [
+    ('xnum', int64),
+    ('ynum', int64),
     ('P_first', float64[:]),
-    ('B_top', float64[:]),
-    ('B_bottom', float64[:]),
-    ('B_left', float64[:]),
-    ('B_right', float64[:]),
+    ('B_top', float64[:,:]),
+    ('B_bottom', float64[:,:]),
+    ('B_left', float64[:,:]),
+    ('B_right', float64[:,:]),
     ('B_intern', float64[:]),
-    ('BT_top', float64[:]),
-    ('BT_bottom', float64[:]),
-    ('BT_left', float64[:]),
-    ('BT_right', float64[:])
+    ('BT_top', float64[:,:]),
+    ('BT_bottom', float64[:,:]),
+    ('BT_left', float64[:,:]),
+    ('BT_right', float64[:,:])
     ]
 
 @jitclass(spec_BC)
@@ -98,9 +100,11 @@ class BCs():
         None.
 
         """
+        self.xnum = xnum
+        self.ynum = ynum
         
         # pressure BC
-        self.P_first = np.array([0,0])
+        self.P_first = np.array([0.0,0.0])
         
         # velocity BCs
         self.B_top = np.zeros((xnum+1, 4))
@@ -110,8 +114,8 @@ class BCs():
 
         # optional internal boundary, initialised to be switched off
         self.B_intern = np.zeros(8)
-        self.B_intern[0] = -1
-        self.B_intern[4] = -1
+        self.B_intern[0] = -1.0
+        self.B_intern[4] = -1.0
         
         
         # Temperature BCs
@@ -141,16 +145,16 @@ class BCs():
         
         
         if condition=="no slip":
-            self.BC_top = np.zeros(np.shape(self.BC_top))
+            self.B_top = np.zeros(np.shape(self.B_top))
             
         elif condition=="free slip":
-            self.BC_top[:,1] = 1
+            self.B_top[:,1] = 1.0
         
         elif condition=="prescribed parallel velocity":
             if v==None:
                 raise ValueError("You must provide a velocity value if using prescribed velocity conditions")
             else:
-                self.BC_top[:,0] = v
+                self.B_top[:,0] = v
             
         else:
             raise ValueError("Boundary condition option not recognised, run show_BC_options to see available BC types")
@@ -176,16 +180,16 @@ class BCs():
         
         
         if condition=="no slip":
-            self.BC_bot = np.zeros(np.shape(self.BC_bot))
+            self.B_bottom = np.zeros(np.shape(self.B_bottom))
             
         elif condition=="free slip":
-            self.BC_bot[:,1] = 1
+            self.B_bottom[:,1] = 1.0
         
         elif condition=="prescribed parallel velocity":
             if v==None:
                 raise ValueError("You must provide a velocity value if using prescribed velocity conditions")
             else:
-                self.BC_bot[:,0] = v
+                self.B_bottom[:,0] = v
             
         else:
             raise ValueError("Boundary condition option not recognised, run show_BC_options to see available BC types")
@@ -211,16 +215,16 @@ class BCs():
           
           
         if condition=="no slip":
-            self.BC_left = np.zeros(np.shape(self.BC_left))
+            self.B_left = np.zeros(np.shape(self.B_left))
               
         elif condition=="free slip":
-            self.BC_left[:,3] = 1
+            self.B_left[:,3] = 1.0
           
         elif condition=="prescribed parallel velocity":
             if v==None:
                 raise ValueError("You must provide a velocity value if using prescribed velocity conditions")
             else:
-                self.BC_left[:,2] = v
+                self.B_left[:,2] = v
               
         else:
             raise ValueError("Boundary condition option not recognised, run show_BC_options to see available BC types")
@@ -246,16 +250,16 @@ class BCs():
         
         
         if condition=="no slip":
-            self.BC_right = np.zeros(np.shape(self.BC_right))
+            self.B_right = np.zeros(np.shape(self.B_right))
             
         elif condition=="free slip":
-            self.BC_right[:,3] = 1
+            self.B_right[:,3] = 1.0
         
         elif condition=="prescribed parallel velocity":
             if v==None:
                 raise ValueError("You must provide a velocity value if using prescribed velocity conditions")
             else:
-                self.BC_right[:,2] = v
+                self.B_right[:,2] = v
             
         else:
             raise ValueError("Boundary condition option not recognised, run show_BC_options to see available BC types")
@@ -287,7 +291,7 @@ class BCs():
         """
         
         if condition=="insulating":
-            BC[:,1] = 1
+            BC[:,1] = 1.0
             
         elif condition=="fixed T":
             if T==None:
@@ -333,7 +337,7 @@ class BCs():
 
         """
         
-        self.set_T_BC(self.BT_bot, condition, T=T)
+        self.set_T_BC(self.BT_bottom, condition, T=T)
     
         
     def set_left_T_BC(self, condition, T=None):

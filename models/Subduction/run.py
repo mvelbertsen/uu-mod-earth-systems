@@ -33,8 +33,7 @@ debug = 1
 ###############################################################################
 # step 1 : initialize the model run
 ###############################################################################
-params, grid, materials, markers, P_first, B_top, B_bottom,\
-B_left, B_right, B_intern, BT_top, BT_bottom, BT_left, BT_right = initializeModel()
+params, grid, materials, markers, BC = initializeModel()
 
 
 # initialize grid0 for old values
@@ -62,8 +61,7 @@ for nt in range(0, params.ntstp_max):
     
     ###########################################################################
     # do a timestep
-    step(params, grid, materials, markers, P_first, B_top, B_bottom,\
-    B_left, B_right, B_intern, BT_top, BT_bottom, BT_left, BT_right, timestep, nt, grid0, debug)
+    step(params, grid, materials, markers, BC, timestep, nt, grid0, debug)
 
 
     ###########################################################################
@@ -88,7 +86,7 @@ for nt in range(0, params.ntstp_max):
     ###########################################################################
     # Make any model-specific adjustments 
     # eg. for a moving grid, update the grid positions
-    updateGrid(params, grid, time_curr, timestep, B_bottom)
+    updateGrid(params, grid, time_curr, timestep, BC.B_bottom)
     
         
     ###########################################################################

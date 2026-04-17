@@ -14,6 +14,7 @@ from numba.types import unicode_type
 from numba.experimental import jitclass
 
 from solver.dataStructures import Markers, Grid, Materials
+from solver.physics.boundaryConditions import BCs
 
 
 def initialize_markers(markers, materials, params):
@@ -159,46 +160,8 @@ def initializeModel():
         Initialized markers object.
     P_first : ARRAY
         Array with 2 entries, specifying pressure BC.
-    B_top : ARRAY
-        Boundary conditions at the top of the grid. Array has 4 columns, 
-        values in each are defined as: 
-        vx[0,j] = B_top[j,0] + vx[1,j]*B_top[j,1]
-        vy[0,j] = B_top[j,2] + vy[1,j]*B_top[j,3]
-    B_bottom : ARRAY
-        Boundary conditions at the bottom of the grid. Array has 4 columns, 
-        values in each are defined as: 
-        vx[0,j] = B_bot[j,0] + vx[1,j]*B_bot[j,1]
-        vy[0,j] = B_bot[j,2] + vy[1,j]*B_bot[j,3]
-    B_left : ARRAY
-        Boundary conditions at the left of the grid. Array has 4 columns, 
-        values in each are defined as: 
-        vx[0,i] = B_left[i,0] + vx[1,i]*B_left[i,1]
-        vy[0,i] = B_left[j,2] + vy[1,i]*B_left[i,3]
-    B_right : ARRAY
-        Boundary conditions at the left of the grid. Array has 4 columns, 
-        values in each are defined as: 
-        vx[0,i] = B_right[i,0] + vx[1,i]*B_right[i,1]
-        vy[0,i] = B_right[j,2] + vy[1,i]*B_right[i,3]
-    B_intern : ARRAY
-        Array defining optional internal boundary eg. moving wall. Format is:
-        B_intern[0] = x-index of vx nodes with prescribed velocity (-1 is not in use)
-        B_intern[1-2] = min/max y-index of the wall
-        B_intern[3] = prescribed x-velocity value.
-        B_intern[4] = y-index of vy nodes with prescribed velocity (-1 is not in use) 
-        B_intern[5-6] = min/max x-index of the wall. 
-        B_intern[7] = prescribed y-velocity value.
-    BT_top : ARRAY
-        Top temperature BCs.  Array has 2 columns, values in each are defined as:
-        T[i,j] = BT_top[0] + BT_top[1]*T[i+1,j]
-    BT_bottom : ARRAY
-        Bottom temperature BCs.  Array has 2 columns, values in each are defined as:
-        T[i,j] = BT_bottom[0] + BT_bottom[1]*T[i-1,j]
-    BT_left : ARRAY
-        Left temperature BCs.  Array has 2 columns, values in each are defined as:
-        T[i,j] = BT_left[0] + BT_left[1]*T[i,j+1]
-    BT_right : ARRAY
-        Right temperature BCs.  Array has 2 columns, values in each are defined as:
-        T[i,j] = BT_right[0] + BT_right[1]*T[i,j-1]
+    BC : BCs Class
+        Object containing all boundary condition arrays for velocity, pressure and temperature 
 
     '''
     
@@ -220,57 +183,44 @@ def initializeModel():
 
     ###########################################################################    
     # Boundary conditions
-    # pressure BCs
-    P_first = np.array([0,1e5])
+    # instantiate the empty class
+    BC = BCs(xnum, ynum)
+    
+    # pressure BCs - pressure in top-left node
+    BC.P_first[1] = 1e5
 
     # velocity BCs
-    B_top = np.zeros((xnum+1,4))
-    B_top[:,1] = 1
+    BC.set_top_BC("free slip")
+    BC.set_bottom_BC("free slip")
+    BC.set_left_BC("free slip")
+    BC.set_right_BC("free slip")
 
-    B_bottom = np.zeros((xnum+1,4))
-    B_bottom[:,1] = 1
-    B_bottom[:,2] = 0
-
-    B_left = np.zeros((ynum+1,4))
-    B_left[:,0] = 0 
-    B_left[:,3] = 1
-
-    B_right = np.zeros((ynum+1,4))
-    B_right[:,0] = 0 
-    B_right[:,3] = 1
 
     # optional internal boundary
-    B_intern = np.zeros(8)
-    B_intern[0] = 102
-    B_intern[1] = 20
-    B_intern[2] = 23
-    B_intern[3] = (-5*1e-2)/(365.25*24*3600)  # convert to m/s 7.5
-    B_intern[4] = -1 
-    B_intern[5] = 0
-    B_intern[6] = 0
-    B_intern[7] = 0
+    BC.B_intern[0] = 102
+    BC.B_intern[1] = 20
+    BC.B_intern[2] = 23
+    BC.B_intern[3] = (-5*1e-2)/(365.25*24*3600)  # convert to m/s 7.5
+    BC.B_intern[4] = -1 
+    BC.B_intern[5] = 0
+    BC.B_intern[6] = 0
+    BC.B_intern[7] = 0
     
 
     # temperature BCs
-    BT_top = np.zeros((xnum, 2))
-    BT_bottom = np.zeros((xnum, 2))
-    BT_left = np.zeros((ynum, 2))
-    BT_right = np.zeros((ynum, 2))
+    BC.set_top_T_BC("fixed T", params.T_top)
+    BC.set_bottom_T_BC("fixed T", params.T_bot)
 
-    # upper and lower  = fixed T
-    BT_top[:,0] = params.T_top
-    BT_bottom[:,0] = params.T_bot
+    BC.set_left_T_BC("insulating")
+    BC.set_right_T_BC("insulating")
 
-    # left and right = insulating?
-    BT_left[:,1] = 1
-    BT_right[:,1] = 1
 
     ###########################################################################
     # create grid object
     grid = Grid(xnum, ynum)
 
     # define grid points for (potentially) unevenly spaced grid
-    updateGrid(params, grid, 0, params.tstp_max, B_bottom)
+    updateGrid(params, grid, 0, params.tstp_max, BC.B_bottom)
     
     # TODO: check that if viscbox is in use the internal wall is inside it!
     
@@ -284,8 +234,7 @@ def initializeModel():
     # initialize markers
     initialize_markers(markers, materials, params)
     
-    return params, grid, materials, markers, P_first, B_top, B_bottom,\
-           B_left, B_right, B_intern, BT_top, BT_bottom, BT_left, BT_right
+    return params, grid, materials, markers, BC
     
 
 

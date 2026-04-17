@@ -24,8 +24,7 @@ from solver.physics.grid_fns import updateStresses, viscElastStress, strainRateC
 
 
 
-def step(params, grid, materials, markers, P_first, B_top, B_bottom,\
-             B_left, B_right, B_intern, BT_top, BT_bottom, BT_left, BT_right, timestep, ntstp, grid0, debug):
+def step(params, grid, materials, markers, BC, timestep, ntstp, grid0, debug):
     """
     Performs a timestep of the solver, not including visualisation and grid changes which are model-dependent.
     
@@ -44,48 +43,8 @@ def step(params, grid, materials, markers, P_first, B_top, B_bottom,\
         Initialised materials object.
     markers : Markers object
         Initialized markers object.
-    P_first : ARRAY
-        Array with 2 entries, specifying pressure BC.
-    B_top : ARRAY
-        Boundary conditions at the top of the grid. Array has 4 columns, 
-        values in each are defined as: 
-        vx[0,j] = B_top[j,0] + vx[1,j]*B_top[j,1]
-        vy[0,j] = B_top[j,2] + vy[1,j]*B_top[j,3]
-    B_bottom : ARRAY
-        Boundary conditions at the bottom of the grid. Array has 4 columns, 
-        values in each are defined as: 
-        vx[0,j] = B_bot[j,0] + vx[1,j]*B_bot[j,1]
-        vy[0,j] = B_bot[j,2] + vy[1,j]*B_bot[j,3]
-    B_left : ARRAY
-        Boundary conditions at the left of the grid. Array has 4 columns, 
-        values in each are defined as: 
-        vx[0,i] = B_left[i,0] + vx[1,i]*B_left[i,1]
-        vy[0,i] = B_left[j,2] + vy[1,i]*B_left[i,3]
-    B_right : ARRAY
-        Boundary conditions at the left of the grid. Array has 4 columns, 
-        values in each are defined as: 
-        vx[0,i] = B_right[i,0] + vx[1,i]*B_right[i,1]
-        vy[0,i] = B_right[j,2] + vy[1,i]*B_right[i,3]
-    B_intern : ARRAY
-        Array defining optional internal boundary eg. moving wall. Format is:
-        B_intern[0] = x-index of vx nodes with prescribed velocity (-1 is not in use)
-        B_intern[1-2] = min/max y-index of the wall
-        B_intern[3] = prescribed x-velocity value.
-        B_intern[4] = x-index of vy nodes with prescribed velocity (-1 is not in use)
-        B_intern[5-6] = min/max y-index of the wall
-        B_intern[7] = prescribed y-velocity value.
-    BT_top : ARRAY
-        Top temperature BCs.  Array has 2 columns, values in each are defined as:
-        T[i,j] = BT_top[0] + BT_top[1]*T[i+1,j]
-    BT_bottom : ARRAY
-        Bottom temperature BCs.  Array has 2 columns, values in each are defined as:
-        T[i,j] = BT_bottom[0] + BT_bottom[1]*T[i-1,j]
-    BT_left : ARRAY
-        Left temperature BCs.  Array has 2 columns, values in each are defined as:
-        T[i,j] = BT_left[0] + BT_left[1]*T[i,j+1]
-    BT_right : ARRAY
-        Right temperature BCs.  Array has 2 columns, values in each are defined as:
-        T[i,j] = BT_right[0] + BT_right[1]*T[i,j-1]
+    BC : BCs Class
+        Object containing all boundary condition arrays for velocity, pressure and temperature 
     timestep : FLOAT
         The current simulation timestep (this is reset and recalculated every step)
     ntstp : INT
@@ -172,18 +131,18 @@ def step(params, grid, materials, markers, P_first, B_top, B_bottom,\
     if (debug):
         print('marker to grid interp.')
     # interpolate parameters from markers to nodes + compute viscosities
-    markersToGrid(markers, materials, grid, grid0, xnum, ynum, params, timestep, ntstp, plast_y, B_intern)
+    markersToGrid(markers, materials, grid, grid0, xnum, ynum, params, timestep, ntstp, plast_y, BC.B_intern)
     
     
     # apply thermal BCs for interpolated T
     # upper boundary
-    grid.T[0,1:xnum-1] = BT_top[1:xnum-1,0] + BT_top[1:xnum-1,1]*grid.T[1,1:xnum-1]
+    grid.T[0,1:xnum-1] = BC.BT_top[1:xnum-1,0] + BC.BT_top[1:xnum-1,1]*grid.T[1,1:xnum-1]
     # lower boundary
-    grid.T[ynum-1,1:xnum-1] = BT_bottom[1:xnum-1,0] + BT_bottom[1:xnum-1,1]*grid.T[ynum-2,1:xnum-1]
+    grid.T[ynum-1,1:xnum-1] = BC.BT_bottom[1:xnum-1,0] + BC.BT_bottom[1:xnum-1,1]*grid.T[ynum-2,1:xnum-1]
     # left boundary
-    grid.T[:,0] = BT_left[:,0] + BT_left[:,1]*grid.T[:,1]
+    grid.T[:,0] = BC.BT_left[:,0] + BC.BT_left[:,1]*grid.T[:,1]
     # right boundary
-    grid.T[:,xnum-1] = BT_right[:,0] + BT_right[:,1]*grid.T[:,xnum-2]
+    grid.T[:,xnum-1] = BC.BT_right[:,0] + BC.BT_right[:,1]*grid.T[:,xnum-2]
     
     # then interpolate back to markers - only if it is t=0!
     if (ntstp==0):
@@ -201,7 +160,7 @@ def step(params, grid, materials, markers, P_first, B_top, B_bottom,\
         # call Stoke's solver for v, P
         if (debug):
             print('entering Stokes')
-        grid.vx, grid.vy, grid.P, resvx, resvy, resP = StokesContinuitySolver(P_first, grid0.eta_s, grid0.eta_n, xnum, ynum, grid.x, grid.y, R_x, R_y, R_C, B_top, B_bottom, B_left, B_right, B_intern)
+        grid.vx, grid.vy, grid.P, resvx, resvy, resP = StokesContinuitySolver(grid0.eta_s, grid0.eta_n, xnum, ynum, grid.x, grid.y, R_x, R_y, R_C, BC)
     else:
         raise ValueError("Unrecognised movemode value, accepted values are 0 (Stokes eqns). 1=solid body rot not implemented in this version!")
     
@@ -275,7 +234,7 @@ def step(params, grid, materials, markers, P_first, B_top, B_bottom,\
             
             # solve the temperature eqn
             T2, T2res = TemperatureSolver(timestep_T, xnum, ynum, grid.x, grid.y, grid.kT, grid.rhoCP,\
-                                                BT_top, BT_bottom, BT_left, BT_right, RT, T0)
+                                                BC, RT, T0)
             
             # compute temp changes
             dT = T2 - T0
@@ -289,7 +248,7 @@ def step(params, grid, materials, markers, P_first, B_top, B_bottom,\
                 
                 # solve again for T
                 T2, T2res = TemperatureSolver(timestep_T, xnum, ynum, grid.x, grid.y, grid.kT, grid.rhoCP,\
-                                                    BT_top, BT_bottom, BT_left, BT_right, RT, T0)
+                                                    BC, RT, T0)
             
             # add to the total timestep length
             steps_T += timestep_T

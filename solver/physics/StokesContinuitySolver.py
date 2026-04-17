@@ -7,7 +7,7 @@ Uses scipy's sparse arrays and sparse direct matrix solver to solve the Stokes a
 
 """
 import numpy as np
-from scipy.sparse import bsr_matrix, csr_matrix, coo_array
+from scipy.sparse import coo_array
 from scipy.sparse.linalg import spsolve
 from numba import jit
 
@@ -64,7 +64,7 @@ def constructStokesRHS(grid, grid0, params, xnum, ynum):
 
 
 @jit(nopython=True)
-def S_to_grid_Stokes(S, xres, yres, Pscale, B_top, B_bottom, B_left, B_right):
+def S_to_grid_Stokes(S, xres, yres, Pscale, BC):
     '''
     Translates the solution of the linear system back to spatial grids for each
     of vx, vy ,P.  Also enforces velocity BCs
@@ -80,14 +80,8 @@ def S_to_grid_Stokes(S, xres, yres, Pscale, B_top, B_bottom, B_left, B_right):
         Number of nodes in y-direction.
     Pscale : FLOAT
         Pressure scaling constant.
-    B_top : ARRAY
-        Array (xres+1,4) containing the top BC for both x and y vector components.
-    B_bottom : ARRAY
-        Array (xres+1,4) containing the bottom BC for both x and y vector components.
-    B_left : ARRAY
-        Array (yres+1,4) containing the left BC for both x and y vector components.
-    B_right : ARRAY
-        Array (yres+1,4) containing the right BC for both x and y vector components.
+    BC : BCs Class
+        Object containing all boundary condition arrays for velocity, pressure and temperature 
 
     Returns
     -------
@@ -118,24 +112,24 @@ def S_to_grid_Stokes(S, xres, yres, Pscale, B_top, B_bottom, B_left, B_right):
 
     # apply BCs for velocities
     # vx, left right
-    vx[:,0] = B_left[:,0] + B_left[:,1]*vx[:,1]
-    vx[:,xres-1] = B_right[:,0] + B_right[:,1]*vx[:,xres-2]
+    vx[:,0] = BC.B_left[:,0] + BC.B_left[:,1]*vx[:,1]
+    vx[:,xres-1] = BC.B_right[:,0] + BC.B_right[:,1]*vx[:,xres-2]
     # vx, top bottom
-    vx[0,:] = B_top[:xres,0] + B_top[:xres,1]*vx[1,:]
-    vx[yres,:] = B_bottom[:xres,0] + B_bottom[:xres,1]*vx[yres-1,:]
+    vx[0,:] = BC.B_top[:xres,0] + BC.B_top[:xres,1]*vx[1,:]
+    vx[yres,:] = BC.B_bottom[:xres,0] + BC.B_bottom[:xres,1]*vx[yres-1,:]
     
     # vy left right
-    vy[:,0] = B_left[:yres,2] + B_left[:yres,3]*vy[:,1]
-    vy[:,xres] = B_right[:yres,2] + B_right[:yres,3]*vy[:,xres-1]
+    vy[:,0] = BC.B_left[:yres,2] + BC.B_left[:yres,3]*vy[:,1]
+    vy[:,xres] = BC.B_right[:yres,2] + BC.B_right[:yres,3]*vy[:,xres-1]
     # vy, top bottom
-    vy[0,:] = B_top[:,2] + B_top[:,3]*vy[1,:]
-    vy[yres-1,:] = B_bottom[:,2] + B_bottom[:,3]*vy[yres-2,:]
+    vy[0,:] = BC.B_top[:,2] + BC.B_top[:,3]*vy[1,:]
+    vy[yres-1,:] = BC.B_bottom[:,2] + BC.B_bottom[:,3]*vy[yres-2,:]
     
     return vx, vy, P
 
 @jit(nopython=True)
 def StokesConstructMatrix(xnum, ynum, xstp, xstpc, ystp, ystpc, xstp_av, ystp_av, Pscale, Pnorm, Bpres,\
-                          eta_s, eta_n, R_x, R_y, R_C, B_top, B_bottom, B_left, B_right, B_intern):
+                          eta_s, eta_n, R_x, R_y, R_C, BC):
     '''
     Constructs the matrix and RHS vector system for solving the Stoke's + continuity eqns.
 
@@ -173,34 +167,8 @@ def StokesConstructMatrix(xnum, ynum, xstp, xstpc, ystp, ystpc, xstp_av, ystp_av
         RHS values of the y-component momentum equation
     R_C : ARRAY
         RHS values of the continuity equation
-    B_top : ARRAY
-        Boundary conditions at the top of the grid. Array has 4 columns, 
-        values in each are defined as: 
-        vx[0,j] = B_top[j,0] + vx[1,j]*B_top[j,1]
-        vy[0,j] = B_top[j,2] + vy[1,j]*B_top[j,3]
-    B_bottom : ARRAY
-        Boundary conditions at the bottom of the grid. Array has 4 columns, 
-        values in each are defined as: 
-        vx[0,j] = B_bot[j,0] + vx[1,j]*B_bot[j,1]
-        vy[0,j] = B_bot[j,2] + vy[1,j]*B_bot[j,3]
-    B_left : ARRAY
-        Boundary conditions at the left of the grid. Array has 4 columns, 
-        values in each are defined as: 
-        vx[0,i] = B_left[i,0] + vx[1,i]*B_left[i,1]
-        vy[0,i] = B_left[j,2] + vy[1,i]*B_left[i,3]
-    B_right : ARRAY
-        Boundary conditions at the left of the grid. Array has 4 columns, 
-        values in each are defined as: 
-        vx[0,i] = B_right[i,0] + vx[1,i]*B_right[i,1]
-        vy[0,i] = B_right[j,2] + vy[1,i]*B_right[i,3]
-    B_intern : ARRAY
-        Array defining optional internal boundary eg. moving wall. Format is:
-        B_intern[0] = x-index of vx nodes with prescribed velocity (-1 is not in use)
-        B_intern[1-2] = min/max y-index of the wall
-        B_intern[3] = prescribed x-velocity value.
-        B_intern[4] = x-index of vy nodes with prescribed velocity (-1 is not in use)
-        B_intern[5-6] = min/max y-index of the wall
-        B_intern[7] = prescribed y-velocity value.
+    BC : BCs Class
+        Object containing all boundary condition arrays for velocity, pressure and temperature.
 
     Returns
     -------
@@ -234,7 +202,7 @@ def StokesConstructMatrix(xnum, ynum, xstp, xstpc, ystp, ystpc, xstp_av, ystp_av
            kP = kvx+2
            
            ####################### x-Stokes eqn ###############################
-           if (j<xnum-2 and (j!=B_intern[0] or i<B_intern[1] or i>B_intern[2])):
+           if (j<xnum-2 and (j!=BC.B_intern[0] or i<BC.B_intern[1] or i>BC.B_intern[2])):
                # we are not at an internal fixed velocity boundary (or the right boundary),
                # apply internal stencils
                
@@ -258,9 +226,9 @@ def StokesConstructMatrix(xnum, ynum, xstp, xstpc, ystp, ystpc, xstp_av, ystp_av
                    # we are at the boundary, use BCs
                    rows.append(kvx)
                    cols.append(kvx)
-                   data.append(B_left[i+1,1]*2*eta_n[i,j]/xstp[j]/xstpc[j+1])
+                   data.append(BC.B_left[i+1,1]*2*eta_n[i,j]/xstp[j]/xstpc[j+1])
                    
-                   R[kvx] -= B_left[i+1,0]*2*eta_n[i,j]/xstp[j]/xstpc[j+1]
+                   R[kvx] -= BC.B_left[i+1,0]*2*eta_n[i,j]/xstp[j]/xstpc[j+1]
                
                # Right vx node
                if (j < xnum-3):
@@ -272,8 +240,8 @@ def StokesConstructMatrix(xnum, ynum, xstp, xstpc, ystp, ystpc, xstp_av, ystp_av
                    # at the right boundary
                    rows.append(kvx)
                    cols.append(kvx)
-                   data.append(B_right[i+1,1]*2*eta_n[i,j+1]/xstp[j+1]/xstpc[j+1])
-                   R[kvx] -= B_right[i+1,0]*2*eta_n[i,j+1]/xstp[j+1]/xstpc[j+1]
+                   data.append(BC.B_right[i+1,1]*2*eta_n[i,j+1]/xstp[j+1]/xstpc[j+1])
+                   R[kvx] -= BC.B_right[i+1,0]*2*eta_n[i,j+1]/xstp[j+1]/xstpc[j+1]
                 
                # top vx node
                if (i > 0):
@@ -285,8 +253,8 @@ def StokesConstructMatrix(xnum, ynum, xstp, xstpc, ystp, ystpc, xstp_av, ystp_av
                    # at the top boundary
                    rows.append(kvx)
                    cols.append(kvx)
-                   data.append(B_top[j+1,1]*eta_s[i,j+1]/ystpc[i]/ystp[i])
-                   R[kvx] -= B_top[j+1,0]*eta_s[i,j+1]/ystpc[i]/ystp[i]
+                   data.append(BC.B_top[j+1,1]*eta_s[i,j+1]/ystpc[i]/ystp[i])
+                   R[kvx] -= BC.B_top[j+1,0]*eta_s[i,j+1]/ystpc[i]/ystp[i]
                    
                # bottom vx node
                if (i < ynum-2):
@@ -297,8 +265,8 @@ def StokesConstructMatrix(xnum, ynum, xstp, xstpc, ystp, ystpc, xstp_av, ystp_av
                else:
                    rows.append(kvx)
                    cols.append(kvx)
-                   data.append(B_bottom[j+1,1]*eta_s[i+1, j+1]/ystpc[i+1]/ystp[i])
-                   R[kvx] -= B_bottom[j+1,0]*eta_s[i+1,j+1]/ystpc[i+1]/ystp[i]
+                   data.append(BC.B_bottom[j+1,1]*eta_s[i+1, j+1]/ystpc[i+1]/ystp[i])
+                   R[kvx] -= BC.B_bottom[j+1,0]*eta_s[i+1,j+1]/ystpc[i+1]/ystp[i]
                    
                # vy 
                # top left vy node
@@ -311,8 +279,8 @@ def StokesConstructMatrix(xnum, ynum, xstp, xstpc, ystp, ystpc, xstp_av, ystp_av
                    kvy_bl = kvx + 1
                    rows.append(kvx)
                    cols.append(kvy_bl)
-                   data.append(B_top[j+1,3]*eta_s[i,j+1]/xstpc[j+1]/ystp[i])
-                   R[kvx] -= B_top[j+1,2]*eta_s[i,j+1]/xstpc[j+1]/ystp[i]
+                   data.append(BC.B_top[j+1,3]*eta_s[i,j+1]/xstpc[j+1]/ystp[i])
+                   R[kvx] -= BC.B_top[j+1,2]*eta_s[i,j+1]/xstpc[j+1]/ystp[i]
 
                # top right vy node
                if (i > 0):
@@ -324,8 +292,8 @@ def StokesConstructMatrix(xnum, ynum, xstp, xstpc, ystp, ystpc, xstp_av, ystp_av
                    kvy_br = kvx + 1 + ynum3
                    rows.append(kvx)
                    cols.append(kvy_br)
-                   data.append(-B_top[j+2,3]*eta_s[i,j+1]/xstpc[j+1]/ystp[i])
-                   R[kvx] += B_top[j+2,2]*eta_s[i,j+1]/xstpc[j+1]/ystp[i]
+                   data.append(-BC.B_top[j+2,3]*eta_s[i,j+1]/xstpc[j+1]/ystp[i])
+                   R[kvx] += BC.B_top[j+2,2]*eta_s[i,j+1]/xstpc[j+1]/ystp[i]
                
                # bottom-left vy node
                if (i < ynum-2):
@@ -342,8 +310,8 @@ def StokesConstructMatrix(xnum, ynum, xstp, xstpc, ystp, ystpc, xstp_av, ystp_av
                    kvy_tl = kvx - 3 + 1
                    rows.append(kvx)
                    cols.append(kvy_tl)
-                   data.append(-B_bottom[j+1,3]*eta_s[i+1,j+1]/xstpc[j+1]/ystp[i])
-                   R[kvx] += B_bottom[j+1,2]*eta_s[i+1,j+1]/xstpc[j+1]/ystp[i]
+                   data.append(-BC.B_bottom[j+1,3]*eta_s[i+1,j+1]/xstpc[j+1]/ystp[i])
+                   R[kvx] += BC.B_bottom[j+1,2]*eta_s[i+1,j+1]/xstpc[j+1]/ystp[i]
 
                # bottom right vy node
                if (i < ynum-2):
@@ -360,8 +328,8 @@ def StokesConstructMatrix(xnum, ynum, xstp, xstpc, ystp, ystpc, xstp_av, ystp_av
                    kvy_tr = kvx - 3 + 1 + ynum3
                    rows.append(kvx)
                    cols.append(kvy_tr)
-                   data.append(B_bottom[j+2,3]*eta_s[i+1,j+1]/xstpc[j+1]/ystp[i])
-                   R[kvx] += - B_bottom[j+2,2]*eta_s[i+1,j+1]/xstpc[j+1]/ystp[i]
+                   data.append(BC.B_bottom[j+2,3]*eta_s[i+1,j+1]/xstpc[j+1]/ystp[i])
+                   R[kvx] += - BC.B_bottom[j+2,2]*eta_s[i+1,j+1]/xstpc[j+1]/ystp[i]
                
                # Pressure
                # Left P node
@@ -380,16 +348,16 @@ def StokesConstructMatrix(xnum, ynum, xstp, xstpc, ystp, ystpc, xstp_av, ystp_av
                rows.append(kvx)
                cols.append(kvx)
                data.append(2*Pscale/(xstp_av + ystp_av))
-               if (j!=B_intern[0] or i<B_intern[1] or i>B_intern[2]):
+               if (j!=BC.B_intern[0] or i<BC.B_intern[1] or i>BC.B_intern[2]):
                    # at the external boundary
                    R[kvx] = 0
                else:
                    # Internal prescribed horizontal velocity
-                   R[kvx] = 2*Pscale/(xstp_av + ystp_av)*B_intern[3]
+                   R[kvx] = 2*Pscale/(xstp_av + ystp_av)*BC.B_intern[3]
         
            
            ###################### y Stokes eqn ################################
-           if (i<ynum-2 and (j!=B_intern[4] or i<B_intern[5] or i>B_intern[6])):
+           if (i<ynum-2 and (j!=BC.B_intern[4] or i<BC.B_intern[5] or i>BC.B_intern[6])):
                # we are not at an internal fixed velocity boundary (or the right boundary),
                # apply internal stencils
                
@@ -413,8 +381,8 @@ def StokesConstructMatrix(xnum, ynum, xstp, xstpc, ystp, ystpc, xstp_av, ystp_av
                    # we are at the boundary, use BCs
                    rows.append(kvy)
                    cols.append(kvy)
-                   data.append(B_top[j+1,3]*2*eta_n[i,j]/ystp[i]/ystpc[i+1])
-                   R[kvy] -= B_top[j+1,2]*2*eta_n[i,j]/ystp[i]/ystpc[i+1]
+                   data.append(BC.B_top[j+1,3]*2*eta_n[i,j]/ystp[i]/ystpc[i+1])
+                   R[kvy] -= BC.B_top[j+1,2]*2*eta_n[i,j]/ystp[i]/ystpc[i+1]
                    
                # bottom vy node
                if (i < ynum-3):
@@ -426,8 +394,8 @@ def StokesConstructMatrix(xnum, ynum, xstp, xstpc, ystp, ystpc, xstp_av, ystp_av
                    # at the right boundary
                    rows.append(kvy)
                    cols.append(kvy)
-                   data.append(B_bottom[j+1,3]*2*eta_n[i+1,j]/ystp[i+1]/ystpc[i+1])
-                   R[kvy] -= B_bottom[j+1,2]*2*eta_n[i+1,j]/ystp[i+1]/ystpc[i+1]
+                   data.append(BC.B_bottom[j+1,3]*2*eta_n[i+1,j]/ystp[i+1]/ystpc[i+1])
+                   R[kvy] -= BC.B_bottom[j+1,2]*2*eta_n[i+1,j]/ystp[i+1]/ystpc[i+1]
                 
                # left vy node
                if (j > 0):
@@ -439,8 +407,8 @@ def StokesConstructMatrix(xnum, ynum, xstp, xstpc, ystp, ystpc, xstp_av, ystp_av
                    # at the left boundary
                    rows.append(kvy)
                    cols.append(kvy)
-                   data.append(B_left[i+1,3]*eta_s[i+1,j]/xstpc[j]/xstp[j])
-                   R[kvy] -= B_left[i+1,2]*eta_s[i+1,j]/xstpc[j]/xstp[j]
+                   data.append(BC.B_left[i+1,3]*eta_s[i+1,j]/xstpc[j]/xstp[j])
+                   R[kvy] -= BC.B_left[i+1,2]*eta_s[i+1,j]/xstpc[j]/xstp[j]
                    
                # right vy node
                if (j < xnum-2):
@@ -451,8 +419,8 @@ def StokesConstructMatrix(xnum, ynum, xstp, xstpc, ystp, ystpc, xstp_av, ystp_av
                else:
                    rows.append(kvy)
                    cols.append(kvy)
-                   data.append(B_right[i+1,3]*eta_s[i+1, j+1]/xstpc[j+1]/xstp[j])
-                   R[kvy] -= B_right[i+1,2]*eta_s[i+1,j+1]/xstpc[j+1]/xstp[j]
+                   data.append(BC.B_right[i+1,3]*eta_s[i+1, j+1]/xstpc[j+1]/xstp[j])
+                   R[kvy] -= BC.B_right[i+1,2]*eta_s[i+1,j+1]/xstpc[j+1]/xstp[j]
                    
                # vx
                # top left vx node
@@ -465,8 +433,8 @@ def StokesConstructMatrix(xnum, ynum, xstp, xstpc, ystp, ystpc, xstp_av, ystp_av
                    kvx_tr = kvy - 1
                    rows.append(kvy)
                    cols.append(kvx_tr)
-                   data.append(B_left[i+1,1]*eta_s[i+1,j]/ystpc[i+1]/xstp[j])
-                   R[kvy] -= B_left[i+1,0]*eta_s[i+1,j]/ystpc[i+1]/xstp[j]
+                   data.append(BC.B_left[i+1,1]*eta_s[i+1,j]/ystpc[i+1]/xstp[j])
+                   R[kvy] -= BC.B_left[i+1,0]*eta_s[i+1,j]/ystpc[i+1]/xstp[j]
 
                # bottom-left vx node
                if (j > 0):
@@ -478,8 +446,8 @@ def StokesConstructMatrix(xnum, ynum, xstp, xstpc, ystp, ystpc, xstp_av, ystp_av
                    kvx_br = kvy - 1 + 3
                    rows.append(kvy)
                    cols.append(kvx_br)
-                   data.append(-B_left[i+2,1]*eta_s[i+1,j]/ystpc[i+1]/xstp[j])
-                   R[kvy] += B_left[i+2,0]*eta_s[i+1,j]/ystpc[i+1]/xstp[j]
+                   data.append(-BC.B_left[i+2,1]*eta_s[i+1,j]/ystpc[i+1]/xstp[j])
+                   R[kvy] += BC.B_left[i+2,0]*eta_s[i+1,j]/ystpc[i+1]/xstp[j]
                
                # top-right vx node
                if (j < xnum-2):
@@ -496,8 +464,8 @@ def StokesConstructMatrix(xnum, ynum, xstp, xstpc, ystp, ystpc, xstp_av, ystp_av
                    kvx_tl = kvy - 1 - ynum3
                    rows.append(kvy)
                    cols.append(kvx_tl)
-                   data.append(- B_right[i+1,1]*eta_s[i+1,j+1]/ystpc[i+1]/xstp[j])
-                   R[kvy] += B_right[i+1,0]*eta_s[i+1,j+1]/ystpc[i+1]/xstp[j]
+                   data.append(- BC.B_right[i+1,1]*eta_s[i+1,j+1]/ystpc[i+1]/xstp[j])
+                   R[kvy] += BC.B_right[i+1,0]*eta_s[i+1,j+1]/ystpc[i+1]/xstp[j]
 
                # bottom right vx node
                if (j < xnum-2):
@@ -514,8 +482,8 @@ def StokesConstructMatrix(xnum, ynum, xstp, xstpc, ystp, ystpc, xstp_av, ystp_av
                    kvx_bl = kvy + 3 - 1 - ynum3
                    rows.append(kvy)
                    cols.append(kvx_bl)
-                   data.append(B_right[i+2,1]*eta_s[i+1,j+1]/ystpc[i+1]/xstp[j])
-                   R[kvy] += - B_right[i+2,0]*eta_s[i+1,j+1]/ystpc[i+1]/xstp[j]
+                   data.append(BC.B_right[i+2,1]*eta_s[i+1,j+1]/ystpc[i+1]/xstp[j])
+                   R[kvy] += - BC.B_right[i+2,0]*eta_s[i+1,j+1]/ystpc[i+1]/xstp[j]
                
                # Pressure
                # top P node
@@ -534,12 +502,12 @@ def StokesConstructMatrix(xnum, ynum, xstp, xstpc, ystp, ystpc, xstp_av, ystp_av
                rows.append(kvy)
                cols.append(kvy)
                data.append(2*Pscale/(xstp_av + ystp_av))
-               if (j!=B_intern[4] or i<B_intern[5] or i>B_intern[6]):
+               if (j!=BC.B_intern[4] or i<BC.B_intern[5] or i>BC.B_intern[6]):
                    # at the external boundary
                    R[kvy] = 0
                else:
                    # Internal prescribed horizontal velocity
-                   R[kvy] = 2*Pscale/(xstp_av + ystp_av)*B_intern[7]
+                   R[kvy] = 2*Pscale/(xstp_av + ystp_av)*BC.B_intern[7]
                    
                    
            ###################### continuity eqn ##############################
@@ -558,8 +526,8 @@ def StokesConstructMatrix(xnum, ynum, xstp, xstpc, ystp, ystpc, xstp_av, ystp_av
                    if (j==xnum-2):
                        rows.append(kP)
                        cols.append(kvx_l)
-                       data.append(B_right[i+1,1]*Pscale/xstp[j])
-                       R[kP] -= B_right[i+1,0]*Pscale/xstp[j]
+                       data.append(BC.B_right[i+1,1]*Pscale/xstp[j])
+                       R[kP] -= BC.B_right[i+1,0]*Pscale/xstp[j]
                
                # right vx node
                if (j<xnum-2):
@@ -571,8 +539,8 @@ def StokesConstructMatrix(xnum, ynum, xstp, xstpc, ystp, ystpc, xstp_av, ystp_av
                    if (j==0):
                        rows.append(kP)
                        cols.append(kvx_r)
-                       data.append(-B_left[i+1,1]*Pscale/xstp[j])
-                       R[kP] += B_left[i+1,0]*Pscale/xstp[j]
+                       data.append(-BC.B_left[i+1,1]*Pscale/xstp[j])
+                       R[kP] += BC.B_left[i+1,0]*Pscale/xstp[j]
                
                # top vy node
                if (i>0):
@@ -584,8 +552,8 @@ def StokesConstructMatrix(xnum, ynum, xstp, xstpc, ystp, ystpc, xstp_av, ystp_av
                    if (i==ynum-2):
                        rows.append(kP)
                        cols.append(kvy_t)
-                       data.append(B_bottom[j+1,3]*Pscale/ystp[i])
-                       R[kP] -= B_bottom[j+1,2]*Pscale/ystp[i]
+                       data.append(BC.B_bottom[j+1,3]*Pscale/ystp[i])
+                       R[kP] -= BC.B_bottom[j+1,2]*Pscale/ystp[i]
                
                # bottom vy node
                if (i<ynum-2):
@@ -597,8 +565,8 @@ def StokesConstructMatrix(xnum, ynum, xstp, xstpc, ystp, ystpc, xstp_av, ystp_av
                    if (i==0):
                        rows.append(kP)
                        cols.append(kvy_b)
-                       data.append(-B_top[j+1,3]*Pscale/ystp[i])
-                       R[kP] += B_top[j+1,2]*Pscale/ystp[i]
+                       data.append(-BC.B_top[j+1,3]*Pscale/ystp[i])
+                       R[kP] += BC.B_top[j+1,2]*Pscale/ystp[i]
            
            # pressure def for the boundary condition regions
            else:
@@ -631,7 +599,7 @@ def StokesConstructMatrix(xnum, ynum, xstp, xstpc, ystp, ystpc, xstp_av, ystp_av
 
 
 
-def StokesContinuitySolver(P_first, eta_s, eta_n, xnum, ynum, gridx, gridy, R_x, R_y, R_C, B_top, B_bottom, B_left, B_right, B_intern):
+def StokesContinuitySolver(eta_s, eta_n, xnum, ynum, gridx, gridy, R_x, R_y, R_C, BC):
     '''
     This function formulates and solves  
     Stokes and Continuity equations defined on 2D staggered irregularly spaced grid
@@ -642,10 +610,6 @@ def StokesContinuitySolver(P_first, eta_s, eta_n, xnum, ynum, gridx, gridy, R_x,
 
     Parameters
     ----------
-    P_first : ARRAY
-        2 element array that defines pressure BCs. 
-        P_first[0] sets the type of pressure BC (0=defined by one cell, 1=top and bottom).
-        P_first[1] is the boundary value
     eta_s : ARRAY
         The shear stress viscosity values.
     eta_n : ARRAY
@@ -664,34 +628,8 @@ def StokesContinuitySolver(P_first, eta_s, eta_n, xnum, ynum, gridx, gridy, R_x,
         RHS values of the y-component momentum equation
     R_C : ARRAY
         RHS values of the continuity equation
-    B_top : ARRAY
-        Boundary conditions at the top of the grid. Array has 4 columns, 
-        values in each are defined as: 
-        vx[0,j] = B_top[j,0] + vx[1,j]*B_top[j,1]
-        vy[0,j] = B_top[j,2] + vy[1,j]*B_top[j,3]
-    B_bottom : ARRAY
-        Boundary conditions at the bottom of the grid. Array has 4 columns, 
-        values in each are defined as: 
-        vx[0,j] = B_bot[j,0] + vx[1,j]*B_bot[j,1]
-        vy[0,j] = B_bot[j,2] + vy[1,j]*B_bot[j,3]
-    B_left : ARRAY
-        Boundary conditions at the left of the grid. Array has 4 columns, 
-        values in each are defined as: 
-        vx[0,i] = B_left[i,0] + vx[1,i]*B_left[i,1]
-        vy[0,i] = B_left[j,2] + vy[1,i]*B_left[i,3]
-    B_right : ARRAY
-        Boundary conditions at the left of the grid. Array has 4 columns, 
-        values in each are defined as: 
-        vx[0,i] = B_right[i,0] + vx[1,i]*B_right[i,1]
-        vy[0,i] = B_right[j,2] + vy[1,i]*B_right[i,3]
-    B_intern : ARRAY
-        Array defining optional internal boundary eg. moving wall. Format is:
-        B_intern[0] = x-index of vx nodes with prescribed velocity (-1 is not in use)
-        B_intern[1-2] = min/max y-index of the wall
-        B_intern[3] = prescribed x-velocity value.
-        B_intern[4] = x-index of vy nodes with prescribed velocity (-1 is not in use)
-        B_intern[5-6] = min/max y-index of the wall
-        B_intern[7] = prescribed y-velocity value.
+    BC : BCs Class
+        Object containing all boundary condition arrays for velocity, pressure and temperature.
 
     Returns
     -------
@@ -712,11 +650,11 @@ def StokesContinuitySolver(P_first, eta_s, eta_n, xnum, ynum, gridx, gridy, R_x,
     
     # pressure bcs?
     Bpres = 0
-    Pnorm = P_first[1]
+    Pnorm = BC.P_first[1]
     # Channel flow top->bottom
-    if (P_first[0]==1):
+    if (BC.P_first[0]==1):
         Bpres = 1
-        Pnorm=P_first[1]
+        Pnorm=BC.P_first[1]
     
     # grid steps for the basic nodes
     xstp = gridx[1:] - gridx[:-1]
@@ -745,7 +683,7 @@ def StokesContinuitySolver(P_first, eta_s, eta_n, xnum, ynum, gridx, gridy, R_x,
     
     # construct the matrix system
     rows, cols, dL, R = StokesConstructMatrix(xnum, ynum, xstp, xstpc, ystp, ystpc, xstp_av, ystp_av, Pscale, Pnorm, Bpres,\
-                                 eta_s, eta_n, R_x, R_y, R_C, B_top, B_bottom, B_left, B_right, B_intern)
+                                 eta_s, eta_n, R_x, R_y, R_C, BC)
     
     ###########################################################################
     # solve the matrix system
@@ -758,17 +696,17 @@ def StokesContinuitySolver(P_first, eta_s, eta_n, xnum, ynum, gridx, gridy, R_x,
     S = spsolve(L,R)
     
     # transform result back to spatial grid
-    vx, vy, P = S_to_grid_Stokes(S, xnum, ynum, Pscale, B_top, B_bottom, B_left, B_right)
+    vx, vy, P = S_to_grid_Stokes(S, xnum, ynum, Pscale, BC)
     
     ###########################################################################
     # residuals
-    resx, resy, resc = calculateResiduals(xnum, ynum, xstp, xstpc, ystp, ystpc, eta_s, eta_n, vx, vy, P, R_x, R_y, R_C, B_intern)
+    resx, resy, resc = calculateResiduals(xnum, ynum, xstp, xstpc, ystp, ystpc, eta_s, eta_n, vx, vy, P, R_x, R_y, R_C, BC)
     
 
     return vx, vy, P, resx, resy, resc
 
 @jit
-def calculateResiduals(xnum, ynum, xstp, xstpc, ystp, ystpc, eta_s, eta_n, vx, vy, P, R_x, R_y, R_C, B_intern):
+def calculateResiduals(xnum, ynum, xstp, xstpc, ystp, ystpc, eta_s, eta_n, vx, vy, P, R_x, R_y, R_C, BC):
     '''
     Calculates the residuals of the Stoke's solver.
 
@@ -802,8 +740,8 @@ def calculateResiduals(xnum, ynum, xstp, xstpc, ystp, ystpc, eta_s, eta_n, vx, v
         RHS values of the y-component momentum equation
     R_C : ARRAY
         RHS values of the continuity equation
-    B_intern : ARRAY
-        Array defining optional internal boundary eg. moving wall.
+    BC : BCs Class
+        Object containing all boundary condition arrays for velocity, pressure and temperature.
 
     Returns
     -------
@@ -826,7 +764,7 @@ def calculateResiduals(xnum, ynum, xstp, xstpc, ystp, ystpc, eta_s, eta_n, vx, v
         for j in range(0, xnum+1):
             ####################################################################
             # x Stokes eqn
-            if (j<xnum and (j!=B_intern[0] or i<B_intern[1] or i>B_intern[2])):
+            if (j<xnum and (j!=BC.B_intern[0] or i<BC.B_intern[1] or i>BC.B_intern[2])):
                 if (i==0 or i==ynum or j==0 or j==xnum-1):
                     resx[i,j] = 0
                 else:
@@ -840,7 +778,7 @@ def calculateResiduals(xnum, ynum, xstp, xstpc, ystp, ystpc, eta_s, eta_n, vx, v
         
             ####################################################################
             # y Stokes eqn
-            if (i<ynum and (j!=B_intern[4] or i<B_intern[5] or i>B_intern[6])):
+            if (i<ynum and (j!=BC.B_intern[4] or i<BC.B_intern[5] or i>BC.B_intern[6])):
                 if (i==0 or i==ynum-1 or j==0 or j==xnum):
                     resy[i,j] = 0
                 else:
