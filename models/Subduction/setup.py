@@ -6,14 +6,14 @@ File which contains the setup for a Subduction model
 """
 
 import numpy as np
-import math # TODO: can this be done w. numpy?
+from math import erf
 
 
-from numba import float64, int64
+from numba import float64, int64, typeof
 from numba.types import unicode_type
 from numba.experimental import jitclass
 
-from solver.dataStructures import Markers, Grid, Materials
+from solver.dataStructures import Markers, Grid, Materials, ViscBox
 from solver.physics.boundaryConditions import BCs
 
 
@@ -120,8 +120,8 @@ def initialize_markers(markers, materials, params):
 	        # After Turcotte & Schubert (2002) 
             if (markers.x[mm] > 350000 and markers.y[mm] > 10000 and markers.y[mm] < y_asth):  # markers.y was creater than 10000
                 # T difference at the bottom of the oceanic plate
-                dt = -(params.T_top - T_asth)*(1-math.erf((y_asth-10000)/2/(kappa*age)**0.5))
-                markers.T[mm] = T_asth+dt+(params.T_top-T_asth-dt)*(1-math.erf((markers.y[mm]-10000)/2/(kappa*age)**0.5))
+                dt = -(params.T_top - T_asth)*(1-erf((y_asth-10000)/2/(kappa*age)**0.5))
+                markers.T[mm] = T_asth+dt+(params.T_top-T_asth-dt)*(1-erf((markers.y[mm]-10000)/2/(kappa*age)**0.5))
 
             # linear continental geotherm
             if (markers.x[mm] <= 300000 and markers.y[mm] > 7000 and markers.y[mm]<y_asth):
@@ -132,9 +132,9 @@ def initialize_markers(markers, materials, params):
 		        # Continental geotherm
                 T_cont = params.T_top + (T_asth-params.T_top)*(markers.y[mm]-(7000+(markers.x[mm]-300000)/50000*3000))/(y_asth-7000)
 		        # T difference at the bottom of the oceanic and continental plates
-                dt = -(params.T_top - T_asth)*(1-math.erf((y_asth-10000)/2/(kappa*age)**0.5))
+                dt = -(params.T_top - T_asth)*(1-erf((y_asth-10000)/2/(kappa*age)**0.5))
 		        # Oceanic geotherm
-                T_ocea = T_asth+dt+(params.T_top-T_asth-dt)*(1-math.erf((markers.y[mm]-(7000+(markers.x[mm]-300000)/50000*3000))/2/(kappa*age)**0.5))
+                T_ocea = T_asth+dt+(params.T_top-T_asth-dt)*(1-erf((markers.y[mm]-(7000+(markers.x[mm]-300000)/50000*3000))/2/(kappa*age)**0.5))
 		        # Linear lateral transition
                 mwt = (markers.x[mm]-300000)/50000
 		        # Transitional temperate
@@ -412,6 +412,10 @@ spec_par = [
     ('dsubgridT', float64),
     ('frict_yn', float64),
     ('adia_yn', float64),
+    ('save_output', int64),
+    ('save_fig', int64),
+    ('output_name', unicode_type),
+    ('output_path', unicode_type),
     ('bx', float64),
     ('by', float64),
     ('Nx', int64),
@@ -422,14 +426,7 @@ spec_par = [
     ('b_end', float64),
     ('Ny_end', int64),
     ('by_end', float64),
-    ('save_output', int64),
-    ('save_fig', int64),
-    ('output_name', unicode_type),
-    ('output_path', unicode_type),
-    ('viscbox', int64),
-    ('viscbox_xsize', float64),
-    ('viscbox_ysize', float64),
-    ('viscbox_xpos', float64)
+    ('viscbox', typeof(ViscBox(0)))
 ]
 @jitclass(spec_par)
 class Parameters():
@@ -488,6 +485,15 @@ class Parameters():
         Flag to apply friction heating.
     adia_yn : FLOAT
         Flag to apply adiabatic heating.
+    save_output : INT
+        Number of steps between output, not currently implemented.
+    save_fig : INT
+        Number of steps between plotting of figures.
+    output_name : STR
+        The name of the folder to write the output/figures to.  This will be located
+        in {output_path}/{output_name}.
+    output_path : STR
+        The output path where the result should be written to specified relative to the run.py file's location.
     bx: FLOAT
         x-grid spacing in the high resolution region of the grid.  For uniform grid
         this should be xsize/(xnum-1).
@@ -509,25 +515,8 @@ class Parameters():
         Number of additional uniform grid points added at upper end of x-grid points
     b_end : FLOAT
         Spacing of additional uniform grid points added at upper end of the x-grid points
-    save_output : INT
-        Number of steps between output, not currently implemented.
-    save_fig : INT
-        Number of steps between plotting of figures.
-    output_name : STR
-        The name of the folder to write the output/figures to.  This will be located
-        in {output_path}/{output_name}.
-    output_path : STR
-        The output path where the result should be written to specified relative to the run.py file's location.
-    viscbox : INT
-        Flag which indicates if the model is using the high viscosity boxb feature.
-    viscbox_xsize : FLOAT
-        x direction physical size of the high viscosity box, used with internal 
-        velocity wall to drive subduction.
-    viscbox_ysize : FLOAT
-        y direction physical size of the high viscosity box, used with internal 
-        velocity wall to drive subduction.
-    viscbox_xpos : FLOAT
-        relative distance along the box where the wall is positioned.
+    viscbox : ViscBox Class object
+        
     
     '''
     
@@ -550,8 +539,8 @@ class Parameters():
         self.Rgas = 8.314                       # gas constant
         
         # physical model setup
-        self.xsize = 880000
-        self.ysize = 320000
+        self.xsize = 880000                     # physical size in x-direction
+        self.ysize = 320000                     # physical size in y-direction
         
         self.T_min = 273                        # Minimum allowed temperature in the simulation
         self.T_top = self.T_min                 # temperature at the top face of the model (K)
@@ -587,7 +576,17 @@ class Parameters():
         self.frict_yn = 1                       # use friction heating?
         self.adia_yn = 1                        # use adiabatic heating?
         
-        # grid spacing params
+        
+        # output options
+        self.save_output = 50                    # number of steps between output files
+        self.save_fig = 12                       # number of steps between figure output    
+        self.output_name = "subductionBase"
+        self.output_path = "../../Results/figures"
+        
+        #######################################################################
+        # optional parameters, required based on model setup
+        
+        # grid spacing params - only required is using updateGrid()
         self.bx = 2200                          # x-grid spacing in high res area
         self.by = 2000                          # y-grid spacing in high res area
         self.Nx = 24                            # number of unevenly spaced grid pointss either side of high res zone
@@ -601,17 +600,11 @@ class Parameters():
         self.by_end = 40e3                      # grid spacing in uniform region at upper edge       
 
  
-        # output options
-        self.save_output = 50                    # number of steps between output files
-        self.save_fig = 12                       # number of steps between figure output    
-        self.output_name = "subductionBase"
-        self.output_path = "../../Results/figures"
-        
-        # high viscosity box parameters
-        self.viscbox = 1
-        self.viscbox_xsize = 60000
-        self.viscbox_ysize = 30000
-        self.viscbox_xpos = 0.1666    
+        # high viscosity box, if using, call constructor with 1 and set parameter values here
+        self.viscbox = ViscBox(1)
+        self.viscbox.xsize = 60000
+        self.viscbox.ysize = 30000
+        self.viscbox.xpos = 0.1666
     
 
 

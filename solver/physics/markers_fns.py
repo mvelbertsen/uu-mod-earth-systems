@@ -18,7 +18,7 @@ from solver.physics.markerUtils import applyGridContrib, applyMarkerContrib,\
 
 
 @jit(nopython=True)
-def markersToGrid(markers, materials, grid, grid0, xnum, ynum, params, tstep, ntstp, plast_y, B_intern):
+def markersToGrid(markers, materials, grid, grid0, xnum, ynum, params, tstep, ntstp, plast_y, B_intern, P_first):
     '''
     Reads or calculates the marker values for density, thermal quantities, viscosity, stresses, mu
     and interpolates them to the grid.  This is called at the beginning of each timestep to update the
@@ -49,6 +49,8 @@ def markersToGrid(markers, materials, grid, grid0, xnum, ynum, params, tstep, nt
     B_intern : ARRAY
         Array that sets the optional internal velocity boundary wall, this is often used with a 
         high viscosity region which is set in this function.
+    P_first : ARRAY
+        Prssure boundary condition array, which sets the pressure in the top-left node.
 
     Returns
     -------
@@ -82,7 +84,7 @@ def markersToGrid(markers, materials, grid, grid0, xnum, ynum, params, tstep, nt
             
             # compute the density from the marker temperature
             m_rho = materials.rho[markers.id[m],0]*(1 - materials.rho[markers.id[m],1]*(markers.T[m]-273))\
-                         *(1 + materials.rho[markers.id[m],2]*(markers.P[m] - 1e+5)) #TODO: remove this hard-coded value!
+                         *(1 + materials.rho[markers.id[m],2]*(markers.P[m] - P_first[1]))
             
             # compute rhoCP for the marker
             m_rhoCP = m_rho*materials.Cp[markers.id[m]]
@@ -167,10 +169,10 @@ def markerViscosity(markers, materials, m, grid, params, ntstp, tstep, plast_y, 
         m_eta = materials.visc[mID, 1]
     
     # Optional high constant viscosity at internal boundary 
-    elif (params.viscbox==1 and markers.x[m] > grid.x[int(B_intern[0])] - params.viscbox_xpos*params.viscbox_xsize\
-                            and markers.x[m] < grid.x[int(B_intern[0])] + (1-params.viscbox_xpos)*params.viscbox_xsize\
-                            and markers.y[m] > 0.5*(grid.y[int(B_intern[2])] + grid.y[int(B_intern[1])])-0.5*params.viscbox_ysize\
-                            and markers.y[m] < 0.5*(grid.y[int(B_intern[2])] + grid.y[int(B_intern[1])])+0.5*params.viscbox_ysize):
+    elif (params.viscbox.use==1 and markers.x[m] > grid.x[int(B_intern[0])] - params.viscbox.xpos*params.viscbox.xsize\
+                            and markers.x[m] < grid.x[int(B_intern[0])] + (1-params.viscbox.xpos)*params.viscbox.xsize\
+                            and markers.y[m] > 0.5*(grid.y[int(B_intern[2])] + grid.y[int(B_intern[1])])-0.5*params.viscbox.ysize\
+                            and markers.y[m] < 0.5*(grid.y[int(B_intern[2])] + grid.y[int(B_intern[1])])+0.5*params.viscbox.ysize):
         
         m_eta = 1e28
     else:

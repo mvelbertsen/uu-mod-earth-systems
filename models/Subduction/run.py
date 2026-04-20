@@ -12,7 +12,7 @@ import os
 import sys
 
 # internal imports
-sys.path.append("../../") # required so that we can find the rest of the code from here!
+sys.path.append("../../") # required so that we can find the central model code from here!
 from solver.dataStructures import Grid
 from solver.main import step
 from setup import initializeModel, updateGrid
@@ -43,16 +43,11 @@ grid0 = Grid(grid.xnum, grid.ynum)
 time_curr = 0
 timestep = params.tstp_max
 
-# create path to write directory
 
 # if figures directory doesn't already exist, add it
 if (os.path.exists(f"{params.output_path}/{params.output_name}")==False):
     os.makedirs(f"{params.output_path}/{params.output_name}")
     
-    
-
-#TODO output initial state with makePlots
-
 
 ###############################################################################
 # step 2: time loop
@@ -68,11 +63,8 @@ for nt in range(0, params.ntstp_max):
     # visualization
     if (nt%(params.save_fig)==0):
         print('plotting')
-        
-        # interpolate vx, vy for basic grid
-        # vxb, vyb = basicGridVelocities(grid.vx, grid.vy, grid.xnum, grid.ynum)
-        
-        # wrapper for calling whatever custom plots are defined in setup.py
+
+        # wrapper for calling whatever custom plots are defined in {model_name)/visualisations.py
         makePlots(grid, markers, params, nt, time_curr)
         
 
@@ -97,4 +89,4 @@ for nt in range(0, params.ntstp_max):
         break
 
 end = time() - strt
-print('time elapsed: %f'%(end)) 
+print('time elapsed: %f'%(end))

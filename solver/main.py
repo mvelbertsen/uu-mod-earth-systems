@@ -3,14 +3,12 @@
 
 """
 
-choice of model is made by importing an initializeModel implementation
-from the chosen model directory
+Central function which performs all physical parts of solver step.
 
 """
 
 import numpy as np
 from copy import deepcopy
-
 
 # load the component fucntions from their respective files
 from solver.dataStructures import copyGrid
@@ -20,7 +18,6 @@ from solver.physics.TemperatureSolver import TemperatureSolver, constructTempRHS
 from solver.physics.markers_fns import markersToGrid, gridToMarker, updateMarkerErat, subgridStressChanges,\
                         subgridDiffusion, advectMarkers
 from solver.physics.grid_fns import updateStresses, viscElastStress, strainRateComps
-
 
 
 
@@ -131,7 +128,7 @@ def step(params, grid, materials, markers, BC, timestep, ntstp, grid0, debug):
     if (debug):
         print('marker to grid interp.')
     # interpolate parameters from markers to nodes + compute viscosities
-    markersToGrid(markers, materials, grid, grid0, xnum, ynum, params, timestep, ntstp, plast_y, BC.B_intern)
+    markersToGrid(markers, materials, grid, grid0, xnum, ynum, params, timestep, ntstp, plast_y, BC.B_intern, BC.P_first)
     
     
     # apply thermal BCs for interpolated T
