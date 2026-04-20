@@ -12,6 +12,8 @@ API
    solver.physics.markerUtils
    solver.physics.StokesContinuitySolver
    solver.physics.TemperatureSolver
+   solver.physics.boundaryConditions
    solver.main
    output.visualisation
+   models.common
    models.Subduction.setup
