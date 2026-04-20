@@ -4,14 +4,8 @@
 Visualisation routines for plotting code output
 
 """
-from matplotlib import figure
-import numpy as np
 
-from visualisation import plotSummary, plotMarkers_lithology 
-
-
-
-
+from output.visualisation import plotSummary, plotMarkers_lithology 
 
 
 def makePlots(grid, markers, params, ntstp, t_curr):
@@ -37,12 +31,11 @@ def makePlots(grid, markers, params, ntstp, t_curr):
     None.
 
     """
+    xlims = (0,params.xsize)
+    ylims = (params.ysize,0)
     
-    plotSummary(grid, params, ntstp, t_curr)
-    plotMarkers_lithology(params, markers, grid, ntstp, t_curr)
     
-    
-
-    
+    plotSummary(grid, params, ntstp, t_curr, xlims, ylims)
+    plotMarkers_lithology(params, markers, grid, ntstp, t_curr, xlims, ylims, height=6)
     
     

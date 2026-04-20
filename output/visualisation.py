@@ -14,7 +14,7 @@ from solver.physics.grid_fns import basicGridVelocities
 ###############################################################################
 # fns for plotting from the Grid
 
-def plotTemperature(grid, params, ntstp, t_curr, plot_vel_arrows=False, arrow_stp = 5):
+def plotTemperature(grid, params, ntstp, t_curr, xlims, ylims, aspect_ratio=None, height=None, plot_vel_arrows=False, arrow_stp = 5):
     '''
     Plot a single variable as a colormap, here it is the temperature but this serves as 
     a template for making simple plots of simulation output. It includes the option to
@@ -30,6 +30,10 @@ def plotTemperature(grid, params, ntstp, t_curr, plot_vel_arrows=False, arrow_st
         Current timestep number.
     t_curr : FLOAT
         Current time (s).
+    aspect_ratio : FLOAT (OPTIONAL)
+        Option to manually set the aspect ratio of the plots.
+    height : FLOAT (OPTIONAL)
+        Option to manually set height of an axis.
     vel_arrows : BOOL (OPTIONAL)
         Flag indicating if velocity arrows should be added to the plot.  Defualt is False.
     arrow_stp : INT (OPTIONAL)
@@ -43,8 +47,32 @@ def plotTemperature(grid, params, ntstp, t_curr, plot_vel_arrows=False, arrow_st
     
     X, Y = np.meshgrid(grid.x, grid.y)
     
+    # get aspect ratio
+    xlen = abs(xlims[1] - xlims[0])
+    ylen = abs(ylims[1] - ylims[0])
+    
+    if aspect_ratio == None:
+        asp_rat = xlen/ylen
+    else:
+        asp_rat = aspect_ratio
+    
+    # set ysize of each figure
+    if height==None:
+        y_fig = 3
+    else:
+        y_fig=height
+        
+    if asp_rat <= 1:
+        # add some padding bc. of axis/cb taking up space in x
+        pad = 2.0
+    else:
+        pad = 0.0
+    
+    # number of plots vertically
+    y_plots = 1
+    
     # create figure
-    fig = figure.Figure(figsize=(9,3), constrained_layout=True)
+    fig = figure.Figure(figsize=(asp_rat*y_fig + pad, y_fig*y_plots), constrained_layout=True)
     axs = fig.subplots(1,1, sharex=True, sharey=True)
 
     # plot the temperature as colormap
@@ -59,15 +87,15 @@ def plotTemperature(grid, params, ntstp, t_curr, plot_vel_arrows=False, arrow_st
     # set limits, titles etc.
     fig.colorbar(im, ax=axs,pad=0.0)                                             # display colorbar
     axs.set_title('Temperature (C)')                                             # set plot title
-    axs.set(ylabel='y (m)', xlabel='x (m)', xlim=(0e3, 550e3), ylim=(0, 300e3))  # label the y-axis and x-axis
-    axs.invert_yaxis() 
+    axs.set(ylabel='y (m)', xlabel='x (m)', xlim=xlims, ylim=ylims)  # label the y-axis and x-axis
+    #axs.invert_yaxis() 
     fig.suptitle('Time: %.3f Myr'%(t_curr*1e-6/(365.25*24*3600)))
     
     # save to file 
     fig.savefig('%s/%s/temp_%i.png'%(params.output_path, params.output_name, ntstp))
 
 
-def plotSummary(grid, params, ntstp, t_curr, plotTempContours=False, temp_levels=None):
+def plotSummary(grid, params, ntstp, t_curr, xlims, ylims, aspect_ratio=None, plotTempContours=False, temp_levels=None):
     '''
     Plots several simulation variables in a grid, here we use density, viscosity
     and pressure with velocity arrows on the density plot and optional temperature contours.
@@ -82,6 +110,8 @@ def plotSummary(grid, params, ntstp, t_curr, plotTempContours=False, temp_levels
         Current timestep number.
     t_curr : FLOAT
         Current time (s).
+    aspect_ratio : FLOAT (OPTIONAL)
+        Option to manually set the aspect ratio of the plots.
     plotTempContours : BOOL (OPTIONAL)
         switch to say if temperature contours should be added to plots
     temp_levels : LIST (OPTIONAL)
@@ -96,17 +126,36 @@ def plotSummary(grid, params, ntstp, t_curr, plotTempContours=False, temp_levels
     
     X, Y = np.meshgrid(grid.x, grid.y)
     
-    # create figure and subplots
-    fig = figure.Figure(figsize=(18,18), constrained_layout=True)
+    # get aspect ratio
+    xlen = abs(xlims[1] - xlims[0])
+    ylen = abs(ylims[1] - ylims[0])
+    
+    if aspect_ratio == None:
+        asp_rat = xlen/ylen
+    else:
+        asp_rat = aspect_ratio
+    
+    if asp_rat <= 1:
+        # add some padding bc. of axis/cb taking up space in x
+        pad = 2.0
+    else:
+        pad = 0.0
+    
+    
+    # set ysize of each figure
+    y_fig = 6
+    
+    # number of plots vertically
+    y_plots = 3
+    
+    # create figure
+    fig = figure.Figure(figsize=(asp_rat*y_fig + pad, y_fig*y_plots), constrained_layout=True)
     axs = fig.subplots(3,1, sharex=True, sharey=True)
     
     # check that if temp contours are switched on, values have been provided
     if plotTempContours and temp_levels==None:
         raise ValueError("Plot temperature contours was set to true but no contour values were provided.  Please set temp_levels to a list of temperaure values at which contours should be plotted")
     
-    # set the x,y plot limits
-    xlims = (0,550e3)
-    ylims = (300e3,0)
 
     ###########################################################################
     # density
@@ -287,7 +336,7 @@ def getMarkerField(mark_nums, markers_field):
 
 
 
-def plotMarkers_lithology(params, markers, grid, ntstp, t_curr):
+def plotMarkers_lithology(params, markers, grid, ntstp, t_curr, xlims, ylims, aspect_ratio=None, height=None):
     '''
     Plot the lithology/material ID recorded by the markers.
 
@@ -303,6 +352,14 @@ def plotMarkers_lithology(params, markers, grid, ntstp, t_curr):
         Current timestep number.
     t_curr : FLOAT
         Current time (s).
+    xlims : TUPLE
+        Limits of plotting area in the x-direction.
+    ylims : TUPLE
+        Limits of plotting area in the y-direction.
+    aspect_ratio : FLOAT (OPTIONAL)
+        Option to manually set the aspect ratio of the plots.
+    height : FLOAT (OPTIONAL)
+        Option to manually set height of an axis.
 
     Returns
     -------
@@ -314,8 +371,32 @@ def plotMarkers_lithology(params, markers, grid, ntstp, t_curr):
     marker_map = getMarkerPixelGrid(params, markers, grid, 401)
     mark_com = getMarkerField(marker_map, markers.id)
 
+    # get aspect ratio
+    xlen = abs(xlims[1] - xlims[0])
+    ylen = abs(ylims[1] - ylims[0])
+    
+    if aspect_ratio == None:
+        asp_rat = xlen/ylen
+    else:
+        asp_rat = aspect_ratio
+        
+    if asp_rat <= 1:
+        # add some padding bc. of axis/cb taking up space in x
+        pad = 2.0
+    else:
+        pad = 0.0
+    
+    # set ysize of each figure
+    if height==None:
+        y_fig = 3
+    else:
+        y_fig=height
+    
+    # number of plots vertically
+    y_plots = 1
+
     # create figure
-    fig = figure.Figure(figsize=(9,3), constrained_layout=True)
+    fig = figure.Figure(figsize=(asp_rat*y_fig + pad, y_fig*y_plots), constrained_layout=True)
     axs = fig.subplots(1,1, sharex=True, sharey=True)
     
     # create image grid and temperature contour levels - not in use here?
@@ -325,7 +406,7 @@ def plotMarkers_lithology(params, markers, grid, ntstp, t_curr):
     im = axs.imshow(mark_com, origin='upper', aspect='auto', extent=[0,params.xsize,params.ysize,0])
     fig.colorbar(im, ax=axs,pad=0.0)
     axs.set_title('Lithology') 
-    axs.set(ylabel='y (m)', xlabel ='x (m)', xlim=(0e3, 550e3), ylim=(300e3, 0))                       
+    axs.set(ylabel='y (m)', xlabel ='x (m)', xlim=xlims, ylim=ylims)                       
     
     fig.suptitle('Time: %.3f Myr'%(t_curr*1e-6/(365.25*24*3600)))
     fig.savefig('%s/%s/litho_%i.png'%(params.output_path, params.output_name, ntstp))

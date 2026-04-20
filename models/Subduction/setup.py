@@ -158,8 +158,6 @@ def initializeModel():
         Materials object initialsed with required material properties.
     markers : Markers
         Initialized markers object.
-    P_first : ARRAY
-        Array with 2 entries, specifying pressure BC.
     BC : BCs Class
         Object containing all boundary condition arrays for velocity, pressure and temperature 
 
@@ -316,7 +314,6 @@ def updateGrid(params, grid, t_curr, timestep, BC_bot):
         # if we have changing grid, we also need to update bottom BC
         if (abs(params.v_ext)>0):
             BC_bot[:,2] = -params.v_ext/params.xsize*params.ysize
-            BC_bot[:,3] = 0
     
     # define factor of grid spacing to increase to the right of high res area
     # need to only do this for non-uniform def, otherwise div by 0!
@@ -395,7 +392,6 @@ spec_par = [
     ('T_min', float64),
     ('T_top', float64),
     ('T_bot', float64),
-    ('v_ext', float64),
     ('eta_min', float64),
     ('eta_max', float64),
     ('stress_min', float64),
@@ -416,6 +412,7 @@ spec_par = [
     ('save_fig', int64),
     ('output_name', unicode_type),
     ('output_path', unicode_type),
+    ('v_ext', float64),
     ('bx', float64),
     ('by', float64),
     ('Nx', int64),
@@ -453,8 +450,6 @@ class Parameters():
         Temperature at the upper boundary.
     T_bot : FLOAT
         Temperature on the lower boundary.
-    v_ext : FLOAT
-        Grid extension velocity, for deforming grid.
     eta_min : FLOAT
         Minimum allowed viscosity.
     eta_max : FLOAT
@@ -494,6 +489,8 @@ class Parameters():
         in {output_path}/{output_name}.
     output_path : STR
         The output path where the result should be written to specified relative to the run.py file's location.
+    v_ext : FLOAT
+        Grid extension velocity, for deforming grid.
     bx: FLOAT
         x-grid spacing in the high resolution region of the grid.  For uniform grid
         this should be xsize/(xnum-1).
@@ -515,8 +512,8 @@ class Parameters():
         Number of additional uniform grid points added at upper end of x-grid points
     b_end : FLOAT
         Spacing of additional uniform grid points added at upper end of the x-grid points
-    viscbox : ViscBox Class object
-        
+    viscbox : ViscBox Class
+        Object containing parameters for controlling the optional high viscosity box
     
     '''
     
@@ -545,8 +542,6 @@ class Parameters():
         self.T_min = 273                        # Minimum allowed temperature in the simulation
         self.T_top = self.T_min                 # temperature at the top face of the model (K)
         self.T_bot = 1825                       # temperature at the bottom face of the model (K)
-        
-        self.v_ext = 0.0                        # extension velocity of the grid (cm/yr)
         
         # viscosity model
         self.eta_min = 1e18                     # minimum viscosity
@@ -587,6 +582,7 @@ class Parameters():
         # optional parameters, required based on model setup
         
         # grid spacing params - only required is using updateGrid()
+        self.v_ext = 0.0                        # extension velocity of the grid (cm/yr)
         self.bx = 2200                          # x-grid spacing in high res area
         self.by = 2000                          # y-grid spacing in high res area
         self.Nx = 24                            # number of unevenly spaced grid pointss either side of high res zone

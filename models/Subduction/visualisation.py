@@ -217,10 +217,12 @@ def makePlots(grid, markers, params, ntstp, t_curr):
     None.
 
     """
+    xlims = (0,550e3)
+    ylims = (300e3,0)
     
-    plotTemperature(grid, params, ntstp, t_curr)
-    plotSummary(grid, params, ntstp, t_curr, plotTempContours=True, temp_levels=[100, 150, 350, 450, 1300])
-    plotMarkers_lithology(params, markers, grid, ntstp, t_curr)
+    plotTemperature(grid, params, ntstp, t_curr, xlims, ylims, aspect_ratio=3)
+    plotSummary(grid, params, ntstp, t_curr, xlims, ylims, aspect_ratio=3, plotTempContours=True, temp_levels=[100, 150, 350, 450, 1300])
+    plotMarkers_lithology(params, markers, grid, ntstp, t_curr, xlims, ylims, aspect_ratio=3)
     plotMarkers_strain(params, markers, grid, ntstp, t_curr)
     plotMarkers_stress(params, markers, grid, ntstp, t_curr)
 

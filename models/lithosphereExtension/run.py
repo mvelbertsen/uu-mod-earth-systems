@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 
-Example script for running a model
+Run script for the Subduction model
 
 """
 
@@ -12,10 +12,10 @@ import os
 import sys
 
 # internal imports
-sys.path.append("../../") # required so that we can find the rest of the code from here!
+sys.path.append("../../") # required so that we can find the central model code from here!
 from solver.dataStructures import Grid
 from solver.main import step
-from setup import initializeModel
+from setup import initializeModel, updateGrid
 from visualisation import makePlots
 
 
@@ -35,6 +35,7 @@ debug = 1
 ###############################################################################
 params, grid, materials, markers, BC = initializeModel()
 
+
 # initialize grid0 for old values
 grid0 = Grid(grid.xnum, grid.ynum)
 
@@ -42,10 +43,11 @@ grid0 = Grid(grid.xnum, grid.ynum)
 time_curr = 0
 timestep = params.tstp_max
 
+
 # if figures directory doesn't already exist, add it
 if (os.path.exists(f"{params.output_path}/{params.output_name}")==False):
     os.makedirs(f"{params.output_path}/{params.output_name}")
-
+    
 
 ###############################################################################
 # step 2: time loop
@@ -61,8 +63,8 @@ for nt in range(0, params.ntstp_max):
     # visualization
     if (nt%(params.save_fig)==0):
         print('plotting')
-        
-        # wrapper for calling whatever custom plots are defined in setup.py
+
+        # wrapper for calling whatever custom plots are defined in {model_name)/visualisations.py
         makePlots(grid, markers, params, nt, time_curr)
         
 
@@ -76,6 +78,7 @@ for nt in range(0, params.ntstp_max):
     ###########################################################################
     # Make any model-specific adjustments 
     # eg. for a moving grid, update the grid positions
+    updateGrid(params, grid, time_curr, timestep, BC.B_bottom)
     
         
     ###########################################################################
@@ -86,4 +89,4 @@ for nt in range(0, params.ntstp_max):
         break
 
 end = time() - strt
-print('time elapsed: %f'%(end)) 
+print('time elapsed: %f'%(end))
