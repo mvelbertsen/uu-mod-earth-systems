@@ -336,7 +336,7 @@ def getMarkerField(mark_nums, markers_field):
 
 
 
-def plotMarkers_lithology(params, markers, grid, ntstp, t_curr, xlims, ylims, aspect_ratio=None, height=None):
+def plotMarkers_lithology(params, markers, grid, ntstp, t_curr, xlims, ylims, aspect_ratio=None, height=None, plot_vel_arrows=False):
     '''
     Plot the lithology/material ID recorded by the markers.
 
@@ -360,7 +360,9 @@ def plotMarkers_lithology(params, markers, grid, ntstp, t_curr, xlims, ylims, as
         Option to manually set the aspect ratio of the plots.
     height : FLOAT (OPTIONAL)
         Option to manually set height of an axis.
-
+    plot_vel_arrows : BOOL (Optional)
+        Option to plot velocity arrows on the image, default is False.
+    
     Returns
     -------
     None.
@@ -406,7 +408,14 @@ def plotMarkers_lithology(params, markers, grid, ntstp, t_curr, xlims, ylims, as
     im = axs.imshow(mark_com, origin='upper', aspect='auto', extent=[xlims[0], xlims[1], ylims[0],ylims[1]])
     fig.colorbar(im, ax=axs,pad=0.0)
     axs.set_title('Lithology') 
-    axs.set(ylabel='y (m)', xlabel ='x (m)', xlim=xlims, ylim=ylims)                       
+    axs.set(ylabel='y (m)', xlabel ='x (m)', xlim=xlims, ylim=ylims)               
+
+    # add velocity arrows, not at every cell, step sets the spacing
+    if plot_vel_arrows:
+        arrow_stp = 5
+        vxb, vyb = basicGridVelocities(grid.vx, grid.vy, grid.xnum, grid.ynum)
+        axs.quiver(X[::arrow_stp, ::arrow_stp], Y[::arrow_stp, ::arrow_stp],\
+                      vxb[:grid.ynum,:][::arrow_stp, ::arrow_stp], np.flip(-vyb[:,:grid.xnum],0)[::arrow_stp, ::arrow_stp])	            
     
     fig.suptitle('Time: %.3f Myr'%(t_curr*1e-6/(365.25*24*3600)))
     fig.savefig('%s/%s/litho_%i.png'%(params.output_path, params.output_name, ntstp))

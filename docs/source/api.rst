@@ -16,4 +16,4 @@ API
    solver.main
    output.visualisation
    models.common
-   models.Subduction.setup
+   models.simpleStokes.setup

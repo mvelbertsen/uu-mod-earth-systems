@@ -8,7 +8,7 @@ common functions that can be used by many models
 
 def uniformGrid(params, grid):
     '''
-    Calculates the new grid point spacings based on the current xsize and ysize.
+    Calculates the new grid spacings based on the current xsize and ysize.
     
     This default version implements a fixed, uniform grid.
 

@@ -424,7 +424,7 @@ spec_vb = [
 class ViscBox():
     """
     
-    Object containing parameters for using the optional high visosity box.
+    Object containing parameters for using the optional high viscosity box.
     
     If not required, instantiate in the Parameters object with ViscBox(0).
     

@@ -1,7 +1,17 @@
-Running your model
-==================
+Running existing models
+=======================
 
-To run a model, simply check that you have imported the ``initializeModel`` for your chosen simulation at the top of the ``main.py`` fil, then run the ``main.py`` script!
+Each example model is stored in it's own directory in the ``models`` directory and in each model directory there are
+three ``.py`` files:
+* ``run.py`` is the file from which the model is run.  It contains the main timestepping loop, which allows a model to make extra adjustments after the main solve step has been completed,
+e.g. deforming the grid.
+* ``setup.py`` contains the code required to create the initial conditions of the model.  It is also where all model parameters are set.
+* ``visualisations.py`` contains the model's version of the function ``makePlots``, which is called in ``run.py`` to make plots.  This is also where any plotting routines 
+specific to that model can be defined. 
+
+Each model directory also contains a ``material_properties.txt`` file.  This contains the material parameters for all materials required by the model.
+
+More details on the contents of these files can by found in :ref:`creating-a-model`. 
 
 jit compilation
 ---------------
@@ -12,7 +22,7 @@ If you wish to disable jit e.g. for debugging, change the environment variable `
 Visualisation
 -------------
 
-The ``visualisation.py`` file contains some basic functions for plotting.  To change what variables are plotted, simply change the grid variable in the plot command within these functions to your chosen variable.  :py:class:`dataStructures.Grid` shows the available grid variables for plotting.
+The ``output/visualisation.py`` file contains some common functions for plotting.  To make plots with variants of these functions, you can copy them into the model-specific ``visualisations.py`` file and edit them there, then call your new version in the ``makePlots`` function.  :py:class:`dataStructures.Grid` shows the available grid variables for plotting.
 
 .. note:: The colorbar limits and plotting areas are set manually in the plotting functions, you should adjust these to fit your simulation.
 

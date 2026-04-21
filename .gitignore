@@ -176,6 +176,7 @@ cython_debug/
 
 
 # stuff specific to this repo
+Results/
 Figures/
 Outputs/
 
