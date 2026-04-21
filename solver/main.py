@@ -2,73 +2,78 @@
 # -*- coding: utf-8 -*-
 
 """
-main file for the Visco-elastic-plastic model - run this to run the model!
 
-choice of model is made by importing an initializeModel implementation
-from the chosen model directory
+Central function which performs all physical parts of solver step.
 
 """
 
 import numpy as np
-from numba import jit
 from copy import deepcopy
-from time import time
-import os
-import shutil
-
-# if debugging, this should be 1 AND jitclass tags in dataStructures must be commented out!
-os.environ["NUMBA_DISABLE_JIT"] = "0"
-# if 1 prints out extra statements at various places in the timeloop
-debug = 1
-model_name = "lithosphereExtension"
 
 # load the component fucntions from their respective files
-from dataStructures import Markers, Materials, Grid, copyGrid
+from solver.dataStructures import copyGrid
 
-from physics.StokesContinuitySolver import StokesContinuitySolver, constructStokesRHS
-from physics.TemperatureSolver import TemperatureSolver, constructTempRHS
-from physics.markers_fns import markersToGrid, gridToMarker, updateMarkerErat, subgridStressChanges,\
+from solver.physics.StokesContinuitySolver import StokesContinuitySolver, constructStokesRHS
+from solver.physics.TemperatureSolver import TemperatureSolver, constructTempRHS
+from solver.physics.markers_fns import markersToGrid, gridToMarker, updateMarkerErat, subgridStressChanges,\
                         subgridDiffusion, advectMarkers
-from physics.grid_fns import updateStresses, viscElastStress, strainRateComps
-
-exec(f"from models.{model_name}.visualisation import plotAVar, plotSeveralVars, plotMarkerFields, plotMarkerFields2, basicGridVelocities, plotMarkerFields_Lithology")
-
-# load the setup fn for the chosen model
-exec(f"from models.{model_name}.setup import initializeModel, gridSpacings")
-
-strt = time()
-###############################################################################
-# initialize the model setup 
-params, grid, materials, markers, xsize, ysize, P_first, B_top, B_bottom,\
-B_left, B_right, B_intern, BT_top, BT_bottom, BT_left, BT_right = initializeModel()
+from solver.physics.grid_fns import updateStresses, viscElastStress, strainRateComps
 
 
-# for ease of use, set xnum, ynum
-xnum = grid.xnum
-ynum = grid.ynum
 
-# initialize grid0 for old values
-grid0 = Grid(xnum, ynum)
-
-# compute average step size
-xstp_av = xsize/(xnum-1)
-ystp_av = ysize/(ynum-1)
-
-# initialize timesteping
-time_curr = 0
-timestep = params.tstp_max
-
-
-###############################################################################
-# begin time loop
-for nt in range(0, params.ntstp_max):
+def step(params, grid, materials, markers, BC, timestep, ntstp, grid0, debug):
+    """
+    Performs a timestep of the solver, not including visualisation and grid changes which are model-dependent.
     
+    Should be used in a timestep loop along with custom plotting and grid updates (if required).  
+    
+    See models/simpleStokes/run.py for example usage.
+    
+
+    Parameters
+    ----------
+    params : jit class
+        Class object containing the required model parameters.
+    grid : Grid object
+        Initialised grid object.
+    materials : Materials object
+        Initialised materials object.
+    markers : Markers object
+        Initialized markers object.
+    BC : BCs Class
+        Object containing all boundary condition arrays for velocity, pressure and temperature 
+    timestep : FLOAT
+        The current simulation timestep (this is reset and recalculated every step)
+    ntstp : INT
+        Current timestep number.
+    grid0 : grid Object
+        Initialised grid object for storing old timestep's values
+    debug : INT
+        Flag to say if debug statements should be printed
+    
+
+    Returns
+    -------
+    None.
+
+    """
+    
+    # for ease of use, set xnum, ynum
+    xnum = grid.xnum
+    ynum = grid.ynum
+    
+    
+    
+    # compute average step size
+    xstp_av = params.xsize/(xnum-1)
+    ystp_av = params.ysize/(ynum-1)
+    
+    
+
     # store old grid values
     if (debug):
         print('copying old array')
     copyGrid(grid, grid0)
-    
-    #grid0 = deepcopy(grid)
     
     # and clear all arrays
     grid.rho = np.zeros((ynum,xnum))
@@ -123,21 +128,21 @@ for nt in range(0, params.ntstp_max):
     if (debug):
         print('marker to grid interp.')
     # interpolate parameters from markers to nodes + compute viscosities
-    markersToGrid(markers, materials, grid, grid0, xnum, ynum, params, timestep, nt, plast_y)
+    markersToGrid(markers, materials, grid, grid0, xnum, ynum, params, timestep, ntstp, plast_y, BC.B_intern, BC.P_first)
     
     
     # apply thermal BCs for interpolated T
     # upper boundary
-    grid.T[0,1:xnum-1] = BT_top[1:xnum-1,0] + BT_top[1:xnum-1,1]*grid.T[1,1:xnum-1]
+    grid.T[0,1:xnum-1] = BC.BT_top[1:xnum-1,0] + BC.BT_top[1:xnum-1,1]*grid.T[1,1:xnum-1]
     # lower boundary
-    grid.T[ynum-1,1:xnum-1] = BT_bottom[1:xnum-1,0] + BT_bottom[1:xnum-1,1]*grid.T[ynum-2,1:xnum-1]
+    grid.T[ynum-1,1:xnum-1] = BC.BT_bottom[1:xnum-1,0] + BC.BT_bottom[1:xnum-1,1]*grid.T[ynum-2,1:xnum-1]
     # left boundary
-    grid.T[:,0] = BT_left[:,0] + BT_left[:,1]*grid.T[:,1]
+    grid.T[:,0] = BC.BT_left[:,0] + BC.BT_left[:,1]*grid.T[:,1]
     # right boundary
-    grid.T[:,xnum-1] = BT_right[:,0] + BT_right[:,1]*grid.T[:,xnum-2]
+    grid.T[:,xnum-1] = BC.BT_right[:,0] + BC.BT_right[:,1]*grid.T[:,xnum-2]
     
     # then interpolate back to markers - only if it is t=0!
-    if (time_curr==0):
+    if (ntstp==0):
         gridToMarker([grid.T], [markers.T], markers.x, markers.y, markers.nx, markers.ny, grid)
     
     # compute viscoelastic visc and stress    
@@ -152,7 +157,7 @@ for nt in range(0, params.ntstp_max):
         # call Stoke's solver for v, P
         if (debug):
             print('entering Stokes')
-        grid.vx, grid.vy, grid.P, resvx, resvy, resP = StokesContinuitySolver(P_first, grid0.eta_s, grid0.eta_n, xnum, ynum, grid.x, grid.y, R_x, R_y, R_C, B_top, B_bottom, B_left, B_right, B_intern)
+        grid.vx, grid.vy, grid.P, resvx, resvy, resP = StokesContinuitySolver(grid0.eta_s, grid0.eta_n, xnum, ynum, grid.x, grid.y, R_x, R_y, R_C, BC)
     else:
         raise ValueError("Unrecognised movemode value, accepted values are 0 (Stokes eqns). 1=solid body rot not implemented in this version!")
     
@@ -226,7 +231,7 @@ for nt in range(0, params.ntstp_max):
             
             # solve the temperature eqn
             T2, T2res = TemperatureSolver(timestep_T, xnum, ynum, grid.x, grid.y, grid.kT, grid.rhoCP,\
-                                                BT_top, BT_bottom, BT_left, BT_right, RT, T0)
+                                                BC, RT, T0)
             
             # compute temp changes
             dT = T2 - T0
@@ -240,7 +245,7 @@ for nt in range(0, params.ntstp_max):
                 
                 # solve again for T
                 T2, T2res = TemperatureSolver(timestep_T, xnum, ynum, grid.x, grid.y, grid.kT, grid.rhoCP,\
-                                                    BT_top, BT_bottom, BT_left, BT_right, RT, T0)
+                                                    BC, RT, T0)
             
             # add to the total timestep length
             steps_T += timestep_T
@@ -274,51 +279,3 @@ for nt in range(0, params.ntstp_max):
     # move markers using vel field
     advectMarkers(markers, grid, xnum, ynum, timestep, params.marker_sch)
     
-    ###########################################################################
-    # visualization + output    
-    if (nt%(params.save_fig)==0):
-        print('plotting')
-        
-        # interpolate vx, vy for basic grid
-        vxb, vyb = basicGridVelocities(grid.vx, grid.vy, xnum, ynum)
-        
-        # plotting
-        plotAVar(grid, vxb, vyb, xsize, ysize, nt, time_curr)
-        plotSeveralVars(grid, vxb, vyb, xsize, ysize, nt, time_curr)
-        plotMarkerFields(xsize, ysize, markers, grid, nt, time_curr)
-        plotMarkerFields2(xsize, ysize, markers, grid, nt, time_curr)
-        plotMarkerFields_Lithology(xsize, ysize, markers, grid, nt, time_curr)
-
-    
-    
-    ###########################################################################
-    # advance timestep
-    time_curr += timestep
-    print('Time: %.3f Myr'%(time_curr*1e-6/(365.25*24*3600)))
-    
-    if (debug):
-        print('updating grid spacings')
-    
-    # update grid positions based on extension
-    ysize += -params.v_ext/xsize*ysize*timestep
-    xsize += params.v_ext*timestep
-    
-    g = gridSpacings(params, xsize, ysize, grid, time_curr)
-    
-    # if we have changing grid, need to update bottom BC
-    if (abs(params.v_ext)>0):
-        B_bottom[:,2] = -params.v_ext/xsize*ysize
-        B_bottom[:,3] = 0
-        
-    if (time_curr >= params.t_end):
-        # we have reached the max time specified, exit loop
-        print('t_end reached, exiting loop')
-        break
-
-end = time() - strt
-dest_dir = f"models/{model_name}/Figures"
-if os.path.exists(dest_dir):
-    shutil.rmtree(dest_dir)
-shutil.move("Figures", f"models/{model_name}/")
-print('time elapsed: %f'%(end))    
-

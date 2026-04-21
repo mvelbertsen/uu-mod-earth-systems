@@ -12,13 +12,13 @@ distances, interpolating a value to/from markers, etc. are in markerUtils.
 import numpy as np
 from numba import jit
 
-from dataStructures import Markers, Materials, Grid
-from physics.markerUtils import applyGridContrib, applyMarkerContrib,\
+from solver.dataStructures import Markers, Materials, Grid
+from solver.physics.markerUtils import applyGridContrib, applyMarkerContrib,\
     getMarkerNodeDistances, findNearestNode, applyGridWeights
 
 
 @jit(nopython=True)
-def markersToGrid(markers, materials, grid, grid0, xnum, ynum, params, tstep, ntstp, plast_y):
+def markersToGrid(markers, materials, grid, grid0, xnum, ynum, params, tstep, ntstp, plast_y, B_intern, P_first):
     '''
     Reads or calculates the marker values for density, thermal quantities, viscosity, stresses, mu
     and interpolates them to the grid.  This is called at the beginning of each timestep to update the
@@ -46,6 +46,11 @@ def markersToGrid(markers, materials, grid, grid0, xnum, ynum, params, tstep, nt
         Current timestep number.
     plast_y : INT
         Flag to indicate whether plastic yielding has occured, will be updated by this function.
+    B_intern : ARRAY
+        Array that sets the optional internal velocity boundary wall, this is often used with a 
+        high viscosity region which is set in this function.
+    P_first : ARRAY
+        Prssure boundary condition array, which sets the pressure in the top-left node.
 
     Returns
     -------
@@ -79,7 +84,7 @@ def markersToGrid(markers, materials, grid, grid0, xnum, ynum, params, tstep, nt
             
             # compute the density from the marker temperature
             m_rho = materials.rho[markers.id[m],0]*(1 - materials.rho[markers.id[m],1]*(markers.T[m]-273))\
-                         *(1 + materials.rho[markers.id[m],2]*(markers.P[m] - 1e+5)) #TODO: remove this hard-coded value!
+                         *(1 + materials.rho[markers.id[m],2]*(markers.P[m] - P_first[1]))
             
             # compute rhoCP for the marker
             m_rhoCP = m_rho*materials.Cp[markers.id[m]]
@@ -102,7 +107,7 @@ def markersToGrid(markers, materials, grid, grid0, xnum, ynum, params, tstep, nt
             
             ###################################################################
             # compute marker viscosity
-            m_eta = markerViscosity(markers, materials, m, grid, params, ntstp, tstep, plast_y)
+            m_eta = markerViscosity(markers, materials, m, grid, params, ntstp, tstep, plast_y, B_intern)
             
             # compute 1/mu
             m_mu = 1/materials.mu[markers.id[m]]
@@ -126,7 +131,7 @@ def markersToGrid(markers, materials, grid, grid0, xnum, ynum, params, tstep, nt
 
     
 @jit(nopython=True)
-def markerViscosity(markers, materials, m, grid, params, ntstp, tstep, plast_y):
+def markerViscosity(markers, materials, m, grid, params, ntstp, tstep, plast_y, B_intern):
     '''
     Calculates the viscosity of a marker based on its material type.
 
@@ -155,13 +160,20 @@ def markerViscosity(markers, materials, m, grid, params, ntstp, tstep, plast_y):
         Calculated marker viscosity value.
 
     '''
+
     mID = markers.id[m]
+
     
     if (materials.visc[mID, 0] < 1e-11):
         # constant viscosity
         m_eta = materials.visc[mID, 1]
-        # High constant viscosity at internal boundary 
-    elif (markers.x[m] > 550000 and markers.x[m] < 610000 and markers.y[m] > 30000 and markers.y[m] < 60000):
+    
+    # Optional high constant viscosity at internal boundary 
+    elif (params.viscbox.use==1 and markers.x[m] > grid.x[int(B_intern[0])] - params.viscbox.xpos*params.viscbox.xsize\
+                            and markers.x[m] < grid.x[int(B_intern[0])] + (1-params.viscbox.xpos)*params.viscbox.xsize\
+                            and markers.y[m] > 0.5*(grid.y[int(B_intern[2])] + grid.y[int(B_intern[1])])-0.5*params.viscbox.ysize\
+                            and markers.y[m] < 0.5*(grid.y[int(B_intern[2])] + grid.y[int(B_intern[1])])+0.5*params.viscbox.ysize):
+        
         m_eta = 1e28
     else:
         # power law viscosity

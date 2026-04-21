@@ -344,7 +344,6 @@ class Grid():
     ystpc : ARRAY
         centered node y spacings
         
-    
     '''
     
     
@@ -415,6 +414,46 @@ class Grid():
         self.ystpc = np.zeros((ynum))               # centered node y-spacing
         
 
+spec_vb = [
+    ('use', int64),
+    ('xsize', float64),
+    ('ysize', float64),
+    ('xpos', float64),
+    ]
+@jitclass(spec_vb)
+class ViscBox():
+    """
+    
+    Object containing parameters for using the optional high viscosity box.
+    
+    If not required, instantiate in the Parameters object with ViscBox(0).
+    
+    If required, instantiate with ViscBox(1) and then manually set the other parameters
+    within the Parameters object.
+    
+    Attributes
+    ----------
+    use : INT
+        Flag which indicates if the model is using the high viscosity boxb feature.
+    xsize : FLOAT
+        x direction physical size of the high viscosity box, used with internal 
+        velocity wall to drive subduction.
+    ysize : FLOAT
+        y direction physical size of the high viscosity box, used with internal 
+        velocity wall to drive subduction.
+    xpos : FLOAT
+        relative distance along the box where the wall is positioned.
+    """
+    
+    def __init__(self, use_viscbox):
+        
+        self.use = use_viscbox
+        self.xsize = 0.0
+        self.ysize = 0.0
+        self.xpos = 0.0
+
+
+
 @jit
 def copyGrid(grid, grid0):
     '''
@@ -475,3 +514,4 @@ def copyGrid(grid, grid0):
     grid0.cx = grid.cx.copy()
     grid0.cy = grid.cy.copy()
     
+

@@ -4,7 +4,8 @@
 Visualisation routines for plotting code output
 
 """
-from output.visualisation import plotSummary, plotMarkers_lithology 
+
+from output.visualisation import plotSummary, plotMarkers_lithology, plotTemperature
 
 
 def makePlots(grid, markers, params, ntstp, t_curr):
@@ -36,6 +37,9 @@ def makePlots(grid, markers, params, ntstp, t_curr):
     
     plotSummary(grid, params, ntstp, t_curr, xlims, ylims)
     plotMarkers_lithology(params, markers, grid, ntstp, t_curr, xlims, ylims, height=6)
+    plotTemperature(grid, params, ntstp, t_curr, xlims, ylims, height=6)
+
+
     
     
     

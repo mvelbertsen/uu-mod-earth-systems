@@ -4,6 +4,7 @@
 Visualisation routines for plotting code output
 
 """
+
 from output.visualisation import plotSummary, plotMarkers_lithology 
 
 
@@ -35,7 +36,6 @@ def makePlots(grid, markers, params, ntstp, t_curr):
     
     
     plotSummary(grid, params, ntstp, t_curr, xlims, ylims)
-    plotMarkers_lithology(params, markers, grid, ntstp, t_curr, xlims, ylims, height=6)
-    
+    plotMarkers_lithology(params, markers, grid, ntstp, t_curr, xlims, ylims, height=6, plot_vel_arrows=True)
     
     

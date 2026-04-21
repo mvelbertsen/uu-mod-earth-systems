@@ -1,28 +1,43 @@
-Setting up a model
-==================
+.. _creating-a-model:
 
-To set up a model, first create a new directory in the models directory, with a name that describes what your model will be.  This directory needs to contain a version of ``setup.py`` and a ``material_properties.txt``.  The ``setup.py`` file contains three functions:
+Creating a new model
+====================
 
-:py:func:`models.lithosphereExtension.setup.initializeModel`
+To create a new model, first create a new directory in the models directory, with a name that describes what your model will be.  
+This directory needs to contain a version of ``run.py``, ``setup.py``, ``visualisation.py`` and a ``material_properties.txt``.  
 
-which is used to set boundary conditions and required parameters for a simulation, and
+The ``setup.py`` file should contain two main functions:
 
-:py:func:`models.lithosphereExtension.setup.initialize_markers`
+:py:func:`models.simpleStokes.setup.initializeModel`
 
-which is called by ``initializeModel`` and creates and distributes the markers across the simulation domain.  This function is where the initial material properties and temperatures are defined, based on a marker's position.  This ``initializeModel`` instance should be imported by changing the import path in the ``main.py`` script to match the directory path of you newly created model. 
+which is used to create the grid, intantiate the parameters and set boundary conditions and required parameters for a simulation.  It then calls a second function,
 
-The final function,
+:py:func:`models.simpleStokes.setup.initialize_markers`
 
-:py:func:`models.lithosphereExtension.setup.gridSpacings`
+which creates and distributes the markers across the simulation domain.  This function is where the initial material properties and temperatures are assigned to the markers based on position, setting up the simulation's initial state.
+ 
+Finally, a function is required to set the initial grid up.  
 
-sets up the grid geometry itself.  There are a few implementations of this function already included, the simplest case of a uniform grid is implemented in the ``SimpleStokes`` model.  The ``lithosphereExtension`` model uses a grid with a fixed high resolution area in the upper central region of the domain, with an increasing grid spacing moving outward.  This version also expands over time.  Finally, the ``Subduction`` model sets up a static Swiss Cross grid.
+:py:func:`models.common.uniformGrid`
+
+can be called to create a uniformly spaced, static grid.  If you wish to set up a different kind of grid, you should implement a function which does this in ``setup.py``.  If the grid should also change in time, then this grid function should also be called to update the grid in ``run.py``.
+
+The ``Subduction`` model shows an example of a non-uniform grid, it sets up a static Swiss Cross grid.
+
+For a further example, the ``lithosphereExtension`` model uses a grid with a fixed high resolution area in the upper central region of the domain, with an increasing grid spacing moving outward.  
+This version also expands in the x direction over time, and so is called to update the grid in ``run.py``.  
 
 For your own simulation, you can either copy one of these geometries or create your own implementation.  Each version requires certain parameters to be defined in the ``Parameters`` object.
 
 .. note:: The easiest way to create a new setup is to copy an existing one and edit it! 
 
+Parameters
+----------
+
 There should also be a copy of the Parameters object in ``setup.py``.  This defines all the numerical and physical parameters required for your simulation, there is a base set of parameters that are required for any simulation, which are shown in the example implementation.  You can also add further parameters, by copying the Parameters definition to your setup.py and adding extra attributes, remembering to also add their types to the spec_par list.
-  
+
+For a basic example of the required parameters see :py:class:`models.simpleStokes.setup.Parameters`
+
 .. note:: This cannot be done by creating a class that inherits from the example as ``jitclass`` does not support inheritance.
 
 Material Properties
@@ -103,14 +118,29 @@ This text file should contain the required properties for each different materia
 | term (W/m**3)          |                                         |           |
 +------------------------+-----------------------------------------+-----------+
 
-for values which are optional, 0 should be entered if they are not required/ in use.  This must be done consistently, for example, all of the plasticity parameters should be zeroed if plasticity is not in use.
+for values which are optional, 0 should be entered if they are not required/in use.  This must be done consistently, for example, all of the plasticity parameters should be zeroed if plasticity is not in use.
 
 
 Boundary Conditions
 -------------------
 
+The boundary conditions for the simulation are controlled by the :py:class:`solver.physics.boundaryConditions.BCs` class.
+This stores the arrays for both the velocity and temperature boundary conditions on each wall, as well as the pressure in the first node, and the options for including a fixed velocity wall inside the simulation.
+
+It also includes helper functions that can be used to easily set some common boundary conditions.
+
 Velocity
 ^^^^^^^^
+
+The helper functions in the ``BCs`` class allow you to set the following conditions: "free slip", "no slip" and "prescribed parallel velocity" by using ::
+    
+    BC.set_top_BC("free slip")
+
+(replacing ``top`` with any other direction for other walls).  The full list of helper functions and options can be found here: :py:class:`model.solver.physics.boundaryConditions.BCs`.
+
+If you wish to use another kind of boundary condition, then you must manually set the boundary arrays.  
+
+The implementation is detailed here, and the ``LithosphereExtension`` model's ``initializeModel`` also shows an example of setting a non-standard boundary condition.
 
 The boundary conditions applied at each wall for velocities are specified in 4 arrays: ``B_top``, ``B_bottom``, ``B_left`` and ``B_right``, where top/bottom refers to the y-direction and left/right the x.  Each contain 4 columns with xnum/ynum elements for the top and bottom / left and right arrays repectively.  The first two columns are the :math:`v_x` conditions and the second two are the :math:`v_y` conditions.  The values in the columns set the values for the i/jth (for the x/y directions respectively) 'ghost node' velocities as:
 
@@ -139,11 +169,16 @@ The table below shows how to implement several common boundary conditions in thi
 
 Temperature
 ^^^^^^^^^^^
+The conditions "insulating" and "fixed T" can be set using the ``BCs`` class' helper functions as::
 
-A similar structure is used for the temperature boundary conditions.  These are again specified in 4 arrays: ``BT_top``,``BT_bottom``, ``BT_left`` and ``BT_right``.  Each array contains two columns that are used to calculate the ghost node temperature as:
+    BCs.set_top_T_BC("insulating")
+
+Again, other conditions require you to manually set the boundary array values.  
+A similar structure as in the velocity case is used for the temperature boundary conditions.  These are again specified in 4 arrays: ``BT_top``,``BT_bottom``, ``BT_left`` and ``BT_right``.  Each array contains two columns that are used to calculate the ghost node temperature as:
+
 ``T[0,j] = BT_top[0] + BT_top[1]*T[1,j]``
 
-Some common boundary condition types can be formulated in this structure as:
+Some common boundary condition types (these are already implemented by helper functions) can be formulated in this structure as:
 
 +------------------------+------------------------+
 | Boundary condition     | Array structure        |
@@ -187,8 +222,10 @@ A simple example which shows the effect of this internal wall is in ``models/int
 
 Initial Conditions
 ------------------
-The initial conditions for the simulation are set by applying material IDs and temperatures to the markers in :py:func:`models.lithosphereExtension.setup.initialize_markers`.
+The initial conditions for the simulation are set by applying material IDs and temperatures to the markers in :py:func:`models.simpleStokes.setup.initialize_markers`.
 
-Within this function, the markers are distributed evenly across the domain with a small random displacement.  The user can then assign them a material type/ID and a temperature based on their position.  For example, in the lithosphere extension model, the different materials are assigned using depth, to give the layers of the crust and upper mantle.
+Within this function, the markers are distributed evenly across the domain with a small random displacement.  The user can then assign them a material type/ID and a temperature based on their position.  
+
+For example, in the ``lithosphereExtension`` model, the different materials are assigned using depth, to give the layers of the crust and upper mantle.
 
 

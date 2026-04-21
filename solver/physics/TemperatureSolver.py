@@ -8,8 +8,7 @@ Uses scipy's sparse arrays and sparse direct matrix solver to solve the temperat
 """
 
 import numpy as np
-import matplotlib.pyplot as plt
-from scipy.sparse import bsr_matrix, csr_matrix, coo_array
+from scipy.sparse import coo_array
 from scipy.sparse.linalg import spsolve
 from numba import jit
 
@@ -86,7 +85,7 @@ def S_to_grid(S,xres, yres):
     return T
 
 @jit(nopython=True)
-def TemperatureConstructMatrix(xnum, ynum, gridx, gridy, kt, rho_Cp, tstep, B_top, B_bottom, B_left, B_right, R_heat, T_k):
+def TemperatureConstructMatrix(xnum, ynum, gridx, gridy, kt, rho_Cp, tstep, BC, R_heat, T_k):
     '''
     Constructs the matrix system to be solved for the temperature eqn.
 
@@ -106,18 +105,8 @@ def TemperatureConstructMatrix(xnum, ynum, gridx, gridy, kt, rho_Cp, tstep, B_to
         Density * C_P at the T nodes.
     tstep : FLOAT
         Current timestep.
-    B_top : ARRAY
-        Top temperature BCs.  Array has 2 columns, values in each are defined as:
-        T[i,j] = B_top[0] + B_top[1]*T[i+1,j]
-    B_bottom : ARRAY
-        Bottom temperature BCs.  Array has 2 columns, values in each are defined as:
-        T[i,j] = B_bottom[0] + B_bottom[1]*T[i-1,j]
-    B_left : ARRAY
-        Left temperature BCs.  Array has 2 columns, values in each are defined as:
-        T[i,j] = B_left[0] + B_left[1]*T[i,j+1]
-    B_right : ARRAY
-        Right temperature BCs.  Array has 2 columns, values in each are defined as:
-        T[i,j] = B_right[0] + B_right[1]*T[i,j-1]
+    BC : BCs Class
+        Object containing all boundary condition arrays for velocity, pressure and temperature.
     R_heat : ARRAY
         Heating term at the T nodes.
     T_k : ARRAY
@@ -176,9 +165,9 @@ def TemperatureConstructMatrix(xnum, ynum, gridx, gridy, kt, rho_Cp, tstep, B_to
                     
                     rows.append(k)
                     cols.append(k+1)
-                    data.append(-B_top[j,1])
+                    data.append(-BC.BT_top[j,1])
                     # RHS
-                    R[k] = B_top[j,0]
+                    R[k] = BC.BT_top[j,0]
                     
                 # Lower BC
                 if (i==ynum-1 and j>0 and j<xnum-1):
@@ -189,9 +178,9 @@ def TemperatureConstructMatrix(xnum, ynum, gridx, gridy, kt, rho_Cp, tstep, B_to
                     
                     rows.append(k)
                     cols.append(k-1)
-                    data.append(-B_bottom[j,1])
+                    data.append(-BC.BT_bottom[j,1])
                     # RHS
-                    R[k] = B_bottom[j,0]
+                    R[k] = BC.BT_bottom[j,0]
                     
                 # left BC
                 if (j==0):
@@ -202,9 +191,9 @@ def TemperatureConstructMatrix(xnum, ynum, gridx, gridy, kt, rho_Cp, tstep, B_to
                     
                     rows.append(k)
                     cols.append(k+ynum)
-                    data.append(-B_left[i,1])
+                    data.append(-BC.BT_left[i,1])
                     # RHS
-                    R[k] = B_left[i,0]
+                    R[k] = BC.BT_left[i,0]
                     
                 # right BC
                 if (j==xnum-1):
@@ -215,9 +204,9 @@ def TemperatureConstructMatrix(xnum, ynum, gridx, gridy, kt, rho_Cp, tstep, B_to
                     
                     rows.append(k)
                     cols.append(k-ynum)
-                    data.append(-B_right[i,1])
+                    data.append(-BC.BT_right[i,1])
                     # RHS
-                    R[k] = B_right[i,0]
+                    R[k] = BC.BT_right[i,0]
                     
             # interior points
             else:         
@@ -250,7 +239,7 @@ def TemperatureConstructMatrix(xnum, ynum, gridx, gridy, kt, rho_Cp, tstep, B_to
     return rows, cols, data, R, xstp, xstpc, ystp, ystpc     
 
 
-def TemperatureSolver(tstep, xnum, ynum, gridx, gridy, kt, rho_Cp, B_top, B_bottom, B_left, B_right, R_heat, T_k):
+def TemperatureSolver(tstep, xnum, ynum, gridx, gridy, kt, rho_Cp, BC, R_heat, T_k):
     '''
     Formulates and solves the heat conservation eqn on a 2D, irregularly spaced grid
     using scipy sparse matricies and solver.
@@ -271,15 +260,8 @@ def TemperatureSolver(tstep, xnum, ynum, gridx, gridy, kt, rho_Cp, B_top, B_bott
         Thermal conductivity at the T nodes.
     rho_Cp : ARRAY
         Density * C_P at the T nodes.
-    B_top : ARRAY
-        Top temperature BCs.  Array has 2 columns, values in each are defined as:
-        T[i,j] = BT_top[0] + BT_top[1]*T[i+1,j]
-    B_bottom :  ARRAY
-        Array specifying the boundary T for the bottom (y=L_y) of the domain.
-    B_left :  ARRAY
-        Array specifying the boundary T for the left (x=0) of the domain.
-    B_right :  ARRAY
-        Array specifying the boundary T for the right (x=L_x) of the domain.
+    BC : BCs Class
+        Object containing all boundary condition arrays for velocity, pressure and temperature.
     R_heat : ARRAY
         Heating term at the T nodes.
     T_k : ARRAY
@@ -297,7 +279,7 @@ def TemperatureSolver(tstep, xnum, ynum, gridx, gridy, kt, rho_Cp, B_top, B_bott
     
     # construct the temperature matrix system to solve
     rows, cols, data, R, xstp, xstpc, ystp, ystpc = TemperatureConstructMatrix(xnum, ynum, gridx, gridy, kt, rho_Cp, tstep,\
-                                                                B_top, B_bottom, B_left, B_right, R_heat, T_k)
+                                                                BC, R_heat, T_k)
                 
     # now we can solve the system, first convert to sparse form
     L = coo_array((data, (rows, cols)), shape=(xnum*ynum, xnum*ynum)).tocsr()
