@@ -124,7 +124,7 @@ for values which are optional, 0 should be entered if they are not required/in u
 Boundary Conditions
 -------------------
 
-The boundary conditions for the simulation are controlled by the :py:class:`model.solver.physics.boundaryConditions.BCs` class.
+The boundary conditions for the simulation are controlled by the :py:class:`solver.physics.boundaryConditions.BCs` class.
 This stores the arrays for both the velocity and temperature boundary conditions on each wall, as well as the pressure in the first node, and the options for including a fixed velocity wall inside the simulation.
 
 It also includes helper functions that can be used to easily set some common boundary conditions.
