@@ -403,7 +403,7 @@ def plotMarkers_lithology(params, markers, grid, ntstp, t_curr, xlims, ylims, as
     X, Y = np.meshgrid(grid.x, grid.y)
 
     # plot the lithology as colormap
-    im = axs.imshow(mark_com, origin='upper', aspect='auto', extent=[0,params.xsize,params.ysize,0])
+    im = axs.imshow(mark_com, origin='upper', aspect='auto', extent=[xlims[0], xlims[1], ylims[0],ylims[1]])
     fig.colorbar(im, ax=axs,pad=0.0)
     axs.set_title('Lithology') 
     axs.set(ylabel='y (m)', xlabel ='x (m)', xlim=xlims, ylim=ylims)                       

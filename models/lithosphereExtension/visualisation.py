@@ -35,8 +35,8 @@ def plotMarkers_stress(params, markers, grid, ntstp, t_curr):
 
     '''
     
-    xlims = (0, params.xsize)
-    ylims = (params.ysize, 0)
+    xlims = (grid.x[0], grid.x[-1])
+    ylims = (grid.y[-1], grid.y[0])
     
     # get the mapping of markers to pixel positions
     marker_map = getMarkerPixelGrid(params, markers, grid, 401)
@@ -46,7 +46,7 @@ def plotMarkers_stress(params, markers, grid, ntstp, t_curr):
     mark_sigmaxy = getMarkerField(marker_map, markers.sigmaxy)
     mark_sigmaii = np.sqrt(mark_sigmaxx**2 + mark_sigmaxy**2)
 
-    box_size = [0,params.xsize,params.ysize,0]
+    box_size = [xlims[0], xlims[1], ylims[0],ylims[1]]
     
     
     # create figure, subplots
@@ -123,10 +123,11 @@ def plotMarkers_strain(params, markers, grid, ntstp, t_curr):
     # get the mapping of markers to pixel positions
     marker_map = getMarkerPixelGrid(params, markers, grid, 401)
 
-    box_size = [0,params.xsize,params.ysize,0]
     
-    xlims = (0, params.xsize)
-    ylims = (params.ysize, 0)
+    xlims = (grid.x[0], grid.x[-1])
+    ylims = (grid.y[-1], grid.y[0])
+    
+    box_size = [xlims[0], xlims[1], ylims[0],ylims[1]]
     
     # create figure, subplots
     fig = figure.Figure(figsize=(18,18), constrained_layout=True)
@@ -221,8 +222,8 @@ def makePlots(grid, markers, params, ntstp, t_curr):
     None.
 
     """
-    xlims = (0,params.xsize)
-    ylims = (params.ysize,0)
+    xlims = (grid.x[0], grid.x[-1])
+    ylims = (grid.y[-1], grid.y[0])
     
     plotTemperature(grid, params, ntstp, t_curr, xlims, ylims, aspect_ratio=3)
     plotSummary(grid, params, ntstp, t_curr, xlims, ylims, aspect_ratio=3, plotTempContours=True, temp_levels=[100, 150, 350, 450, 1300])
