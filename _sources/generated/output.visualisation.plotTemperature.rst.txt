@@ -1,0 +1,6 @@
+output.visualisation.plotTemperature
+====================================
+
+.. currentmodule:: output.visualisation
+
+.. autofunction:: plotTemperature

@@ -1,0 +1,6 @@
+models.simpleStokes.setup.initializeModel
+=========================================
+
+.. currentmodule:: models.simpleStokes.setup
+
+.. autofunction:: initializeModel

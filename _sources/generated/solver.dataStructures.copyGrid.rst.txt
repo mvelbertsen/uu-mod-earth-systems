@@ -1,0 +1,6 @@
+solver.dataStructures.copyGrid
+==============================
+
+.. currentmodule:: solver.dataStructures
+
+.. autofunction:: copyGrid

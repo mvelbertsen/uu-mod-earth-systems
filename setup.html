@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Creating a new model &#8212; Modelling Earth Systems 0.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d1102ebc" />
+    <link rel="stylesheet" type="text/css" href="_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=27fed22d" />
+    <script src="_static/documentation_options.js?v=2709fde1"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="API" href="api.html" />
+    <link rel="prev" title="Running existing models" href="run.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="creating-a-new-model">
+<span id="creating-a-model"></span><h1>Creating a new model<a class="headerlink" href="#creating-a-new-model" title="Link to this heading">¶</a></h1>
+<p>To create a new model, first create a new directory in the models directory, with a name that describes what your model will be.
+This directory needs to contain a version of <code class="docutils literal notranslate"><span class="pre">run.py</span></code>, <code class="docutils literal notranslate"><span class="pre">setup.py</span></code>, <code class="docutils literal notranslate"><span class="pre">visualisation.py</span></code> and a <code class="docutils literal notranslate"><span class="pre">material_properties.txt</span></code>.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">setup.py</span></code> file should contain two main functions:</p>
+<p><a class="reference internal" href="generated/models.simpleStokes.setup.initializeModel.html#models.simpleStokes.setup.initializeModel" title="models.simpleStokes.setup.initializeModel"><code class="xref py py-func docutils literal notranslate"><span class="pre">models.simpleStokes.setup.initializeModel()</span></code></a></p>
+<p>which is used to create the grid, intantiate the parameters and set boundary conditions and required parameters for a simulation.  It then calls a second function,</p>
+<p><a class="reference internal" href="generated/models.simpleStokes.setup.initialize_markers.html#models.simpleStokes.setup.initialize_markers" title="models.simpleStokes.setup.initialize_markers"><code class="xref py py-func docutils literal notranslate"><span class="pre">models.simpleStokes.setup.initialize_markers()</span></code></a></p>
+<p>which creates and distributes the markers across the simulation domain.  This function is where the initial material properties and temperatures are assigned to the markers based on position, setting up the simulation’s initial state.</p>
+<p>Finally, a function is required to set the initial grid up.</p>
+<p><a class="reference internal" href="generated/models.common.uniformGrid.html#models.common.uniformGrid" title="models.common.uniformGrid"><code class="xref py py-func docutils literal notranslate"><span class="pre">models.common.uniformGrid()</span></code></a></p>
+<p>can be called to create a uniformly spaced, static grid.  If you wish to set up a different kind of grid, you should implement a function which does this in <code class="docutils literal notranslate"><span class="pre">setup.py</span></code>.  If the grid should also change in time, then this grid function should also be called to update the grid in <code class="docutils literal notranslate"><span class="pre">run.py</span></code>.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">Subduction</span></code> model shows an example of a non-uniform grid, it sets up a static Swiss Cross grid.</p>
+<p>For a further example, the <code class="docutils literal notranslate"><span class="pre">lithosphereExtension</span></code> model uses a grid with a fixed high resolution area in the upper central region of the domain, with an increasing grid spacing moving outward.
+This version also expands in the x direction over time, and so is called to update the grid in <code class="docutils literal notranslate"><span class="pre">run.py</span></code>.</p>
+<p>For your own simulation, you can either copy one of these geometries or create your own implementation.  Each version requires certain parameters to be defined in the <code class="docutils literal notranslate"><span class="pre">Parameters</span></code> object.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The easiest way to create a new setup is to copy an existing one and edit it!</p>
+</div>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<p>There should also be a copy of the Parameters object in <code class="docutils literal notranslate"><span class="pre">setup.py</span></code>.  This defines all the numerical and physical parameters required for your simulation, there is a base set of parameters that are required for any simulation, which are shown in the example implementation.  You can also add further parameters, by copying the Parameters definition to your setup.py and adding extra attributes, remembering to also add their types to the spec_par list.</p>
+<p>For a basic example of the required parameters see <a class="reference internal" href="generated/models.simpleStokes.setup.Parameters.html#models.simpleStokes.setup.Parameters" title="models.simpleStokes.setup.Parameters"><code class="xref py py-class docutils literal notranslate"><span class="pre">models.simpleStokes.setup.Parameters</span></code></a></p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This cannot be done by creating a class that inherits from the example as <code class="docutils literal notranslate"><span class="pre">jitclass</span></code> does not support inheritance.</p>
+</div>
+</section>
+<section id="material-properties">
+<h2>Material Properties<a class="headerlink" href="#material-properties" title="Link to this heading">¶</a></h2>
+<p>This text file should contain the required properties for each different material in your model.  Each row should contain the following values in the order they are listed in the table:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Parameter</p></th>
+<th class="head"><p>Description</p></th>
+<th class="head"><p>Optional?</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>density, <span class="math notranslate nohighlight">\(\rho\)</span></p></td>
+<td><p>basic density of the material</p></td>
+<td><p>no</p></td>
+</tr>
+<tr class="row-odd"><td><p>thermal expansion
+coefficient <span class="math notranslate nohighlight">\(c_T\)</span></p></td>
+<td><p>gives change in density due to thermal
+expansion as: <span class="math notranslate nohighlight">\(\rho (1 - c_T T)\)</span></p></td>
+<td><p>yes</p></td>
+</tr>
+<tr class="row-even"><td><p>Compressibility
+coefficient <span class="math notranslate nohighlight">\(c_P\)</span></p></td>
+<td><p>gives change in density due to pressure
+as <span class="math notranslate nohighlight">\(\rho (1 + c_P P)\)</span></p></td>
+<td><p>yes</p></td>
+</tr>
+<tr class="row-odd"><td><p>Viscosity model
+choice</p></td>
+<td><p>flag which specifies the viscosity
+model used:
+0 = constant, 1 = power law</p></td>
+<td><p>no</p></td>
+</tr>
+<tr class="row-even"><td><p>Constant viscosity</p></td>
+<td><p>If a constant viscosity is chosen, this
+contains the value of that viscosity</p></td>
+<td><p>depends
+on flag</p></td>
+</tr>
+<tr class="row-odd"><td><p>Power law viscosity,
+<span class="math notranslate nohighlight">\(A_d\)</span> parameter</p></td>
+<td><p>The material constant for the
+power law viscosity model
+<span class="math notranslate nohighlight">\(A_d\sigma^n exp(-(E_a+V_a P)/RT)\)</span></p></td>
+<td><p>depends
+on flag</p></td>
+</tr>
+<tr class="row-even"><td><p>Power law viscosity,
+<span class="math notranslate nohighlight">\(n\)</span> parameter</p></td>
+<td><p>The stress exponent for the
+power law viscosity model
+<span class="math notranslate nohighlight">\(A_d\sigma^n exp(-(E_a+V_a P)/RT)\)</span></p></td>
+<td><p>depends
+on flag</p></td>
+</tr>
+<tr class="row-odd"><td><p>Power law viscosity,
+<span class="math notranslate nohighlight">\(E_a\)</span> parameter</p></td>
+<td><p>Experimentally determined rheological
+parameter for power law viscosity model
+<span class="math notranslate nohighlight">\(A_d\sigma^n exp(-(E_a+V_a P)/RT)\)</span></p></td>
+<td><p>depends
+on flag</p></td>
+</tr>
+<tr class="row-even"><td><p>Power law viscosity,
+<span class="math notranslate nohighlight">\(V_a\)</span> parameter</p></td>
+<td><p>Experimentally determined rheological
+parameter for power law viscosity model
+<span class="math notranslate nohighlight">\(A_d\sigma^n exp(-(E_a+V_a P)/RT)\)</span></p></td>
+<td><p>depends
+on flag</p></td>
+</tr>
+<tr class="row-odd"><td><p>Shear modulus</p></td>
+<td><p>The shear modulus of the material</p></td>
+<td><p>no</p></td>
+</tr>
+<tr class="row-even"><td><p>Plasticity, cohesion
+pre strain weakening
+<span class="math notranslate nohighlight">\(C_0\)</span></p></td>
+<td><p>The cohesion used when the strain is
+below the lower strain threshold
+<span class="math notranslate nohighlight">\(\gamma_0\)</span></p></td>
+<td><p>yes</p></td>
+</tr>
+<tr class="row-odd"><td><p>Plasticity, cohesion
+post strain weakening
+<span class="math notranslate nohighlight">\(C_1\)</span></p></td>
+<td><p>The cohesion used when the strain is
+above the upper strain threshold
+<span class="math notranslate nohighlight">\(\gamma_1\)</span></p></td>
+<td><p>yes</p></td>
+</tr>
+<tr class="row-even"><td><p>Plasticity, internal
+friction pre strain
+weakening</p></td>
+<td><p>The internal friction used when the
+strain is below the lower strain
+threshold  <span class="math notranslate nohighlight">\(\gamma_0\)</span></p></td>
+<td><p>yes</p></td>
+</tr>
+<tr class="row-odd"><td><p>Plasticity, internal
+friction post strain
+weakening</p></td>
+<td><p>The internal friction used when the
+strain is above the upper strain
+threshold  <span class="math notranslate nohighlight">\(\gamma_1\)</span></p></td>
+<td><p>yes</p></td>
+</tr>
+<tr class="row-even"><td><p>Plasticity, lower
+strain threshold,
+<span class="math notranslate nohighlight">\(\gamma_0\)</span></p></td>
+<td><p>The strain threshold below which no
+strain weaking is applied</p></td>
+<td><p>yes</p></td>
+</tr>
+<tr class="row-odd"><td><p>Plasticity, upper
+strain threshold,
+<span class="math notranslate nohighlight">\(\gamma_1\)</span></p></td>
+<td><p>The strain threshold above which full
+strain weaking is applied, in between
+a combination of the parameters is used</p></td>
+<td><p>yes</p></td>
+</tr>
+<tr class="row-even"><td><p>Specific heat capacity
+<span class="math notranslate nohighlight">\(C_p\)</span></p></td>
+<td><p>The specific heat capacity at constant
+pressure</p></td>
+<td><p>no</p></td>
+</tr>
+<tr class="row-odd"><td><p>Thermal conductivity
+<span class="math notranslate nohighlight">\(k_T\)</span></p></td>
+<td><p>The constant thermal conductivity</p></td>
+<td><p>no</p></td>
+</tr>
+<tr class="row-even"><td><p>Thermal conductivity
+temperature coefficient
+<span class="math notranslate nohighlight">\(a\)</span></p></td>
+<td><p>The coefficient of temperature
+dependence for the thermal conductivity
+<span class="math notranslate nohighlight">\(k_T + a/(T+77)\)</span></p></td>
+<td><p>yes</p></td>
+</tr>
+<tr class="row-odd"><td><p>Radiogenic heating
+term (W/m**3)</p></td>
+<td><p>Heat production from radiogenic sources</p></td>
+<td><p>yes</p></td>
+</tr>
+</tbody>
+</table>
+<p>for values which are optional, 0 should be entered if they are not required/in use.  This must be done consistently, for example, all of the plasticity parameters should be zeroed if plasticity is not in use.</p>
+</section>
+<section id="boundary-conditions">
+<h2>Boundary Conditions<a class="headerlink" href="#boundary-conditions" title="Link to this heading">¶</a></h2>
+<p>The boundary conditions for the simulation are controlled by the <a class="reference internal" href="generated/solver.physics.boundaryConditions.BCs.html#solver.physics.boundaryConditions.BCs" title="solver.physics.boundaryConditions.BCs"><code class="xref py py-class docutils literal notranslate"><span class="pre">solver.physics.boundaryConditions.BCs</span></code></a> class.
+This stores the arrays for both the velocity and temperature boundary conditions on each wall, as well as the pressure in the first node, and the options for including a fixed velocity wall inside the simulation.</p>
+<p>It also includes helper functions that can be used to easily set some common boundary conditions.</p>
+<section id="velocity">
+<h3>Velocity<a class="headerlink" href="#velocity" title="Link to this heading">¶</a></h3>
+<p>The helper functions in the <code class="docutils literal notranslate"><span class="pre">BCs</span></code> class allow you to set the following conditions: “free slip”, “no slip” and “prescribed parallel velocity” by using</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BC</span><span class="o">.</span><span class="n">set_top_BC</span><span class="p">(</span><span class="s2">&quot;free slip&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>(replacing <code class="docutils literal notranslate"><span class="pre">top</span></code> with any other direction for other walls).  The full list of helper functions and options can be found here: <code class="xref py py-class docutils literal notranslate"><span class="pre">model.solver.physics.boundaryConditions.BCs</span></code>.</p>
+<p>If you wish to use another kind of boundary condition, then you must manually set the boundary arrays.</p>
+<p>The implementation is detailed here, and the <code class="docutils literal notranslate"><span class="pre">LithosphereExtension</span></code> model’s <code class="docutils literal notranslate"><span class="pre">initializeModel</span></code> also shows an example of setting a non-standard boundary condition.</p>
+<p>The boundary conditions applied at each wall for velocities are specified in 4 arrays: <code class="docutils literal notranslate"><span class="pre">B_top</span></code>, <code class="docutils literal notranslate"><span class="pre">B_bottom</span></code>, <code class="docutils literal notranslate"><span class="pre">B_left</span></code> and <code class="docutils literal notranslate"><span class="pre">B_right</span></code>, where top/bottom refers to the y-direction and left/right the x.  Each contain 4 columns with xnum/ynum elements for the top and bottom / left and right arrays repectively.  The first two columns are the <span class="math notranslate nohighlight">\(v_x\)</span> conditions and the second two are the <span class="math notranslate nohighlight">\(v_y\)</span> conditions.  The values in the columns set the values for the i/jth (for the x/y directions respectively) ‘ghost node’ velocities as:</p>
+<p><code class="docutils literal notranslate"><span class="pre">vx[0,j]</span> <span class="pre">=</span> <span class="pre">B_bottom[j,0]</span> <span class="pre">+</span> <span class="pre">vx[1,j]*B_bottom[j,1]</span></code></p>
+<p>and for the <span class="math notranslate nohighlight">\(v_y\)</span> condition,</p>
+<p><code class="docutils literal notranslate"><span class="pre">vy[0,j]</span> <span class="pre">=</span> <span class="pre">B_bottom[j,2]</span> <span class="pre">+</span> <span class="pre">vy[1,j]*B_bottom[j,3]</span></code></p>
+<p>The table below shows how to implement several common boundary conditions in this structure, note that the single row shown is representing the same pattern in all rows of the array:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Boundary condition</p></th>
+<th class="head"><p>Array structure (showing a single row)</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>No slip</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">0,</span> <span class="pre">0,</span> <span class="pre">0]</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Free slip</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1,</span> <span class="pre">0,</span> <span class="pre">0]</span></code> for top / bottom,
+<code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">0,</span> <span class="pre">0,</span> <span class="pre">1]</span></code> for left / right</p></td>
+</tr>
+<tr class="row-even"><td><p>Grid deformation
+spreading in x</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1,</span> <span class="pre">-v/xsize*ysize,</span> <span class="pre">0]</span></code> for top/bottom
+<code class="docutils literal notranslate"><span class="pre">[(-/+)v/2,</span> <span class="pre">0,</span> <span class="pre">0,</span> <span class="pre">1]</span></code> for left/right</p></td>
+</tr>
+<tr class="row-odd"><td><p>Prescribed inflow
+parallel to boundary</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">[v,</span> <span class="pre">0,</span> <span class="pre">0,</span> <span class="pre">0]</span></code> for top / bottom,
+<code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">0,</span> <span class="pre">v,</span> <span class="pre">0]</span></code> for left / right</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="temperature">
+<h3>Temperature<a class="headerlink" href="#temperature" title="Link to this heading">¶</a></h3>
+<p>The conditions “insulating” and “fixed T” can be set using the <code class="docutils literal notranslate"><span class="pre">BCs</span></code> class’ helper functions as:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BCs</span><span class="o">.</span><span class="n">set_top_T_BC</span><span class="p">(</span><span class="s2">&quot;insulating&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Again, other conditions require you to manually set the boundary array values.
+A similar structure as in the velocity case is used for the temperature boundary conditions.  These are again specified in 4 arrays: <code class="docutils literal notranslate"><span class="pre">BT_top</span></code>,``BT_bottom``, <code class="docutils literal notranslate"><span class="pre">BT_left</span></code> and <code class="docutils literal notranslate"><span class="pre">BT_right</span></code>.  Each array contains two columns that are used to calculate the ghost node temperature as:</p>
+<p><code class="docutils literal notranslate"><span class="pre">T[0,j]</span> <span class="pre">=</span> <span class="pre">BT_top[0]</span> <span class="pre">+</span> <span class="pre">BT_top[1]*T[1,j]</span></code></p>
+<p>Some common boundary condition types (these are already implemented by helper functions) can be formulated in this structure as:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>Boundary condition</p></th>
+<th class="head"><p>Array structure
+(showing a single row)</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Insulating</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">[0,</span> <span class="pre">1]</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>Prescribed temperature</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">[T,</span> <span class="pre">0]</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="internal-velocity-boundary">
+<h2>Internal velocity Boundary<a class="headerlink" href="#internal-velocity-boundary" title="Link to this heading">¶</a></h2>
+<p>There is also an option to include a ‘mobile wall’, which is a vertical wall within the simulation domain on which a <span class="math notranslate nohighlight">\(x\)</span> and/or <span class="math notranslate nohighlight">\(y\)</span> velocity can be fixed.  The <span class="math notranslate nohighlight">\(x\)</span> and <span class="math notranslate nohighlight">\(y\)</span> velocities can be fixed on the same or separate vertical lines.  This is implemented using the <code class="docutils literal notranslate"><span class="pre">B_intern</span></code> array, which has the following format:</p>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>index</p></th>
+<th class="head"><p>description</p></th>
+<th class="head"><p>value when
+not in use</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>0</p></td>
+<td><p>x index of the wall on
+which the x velocity is fixed</p></td>
+<td><p>-1</p></td>
+</tr>
+<tr class="row-odd"><td><p>1</p></td>
+<td><p>min y-index of the wall</p></td>
+<td><p>0</p></td>
+</tr>
+<tr class="row-even"><td><p>2</p></td>
+<td><p>max y-index of the wall</p></td>
+<td><p>0</p></td>
+</tr>
+<tr class="row-odd"><td><p>3</p></td>
+<td><p>x-velocity on the wall
+described by elements 0-2</p></td>
+<td><p>0</p></td>
+</tr>
+<tr class="row-even"><td><p>4</p></td>
+<td><p>x index of the wall on
+which the y velocity is fixed</p></td>
+<td><p>-1</p></td>
+</tr>
+<tr class="row-odd"><td><p>5</p></td>
+<td><p>min y-index of the wall</p></td>
+<td><p>0</p></td>
+</tr>
+<tr class="row-even"><td><p>6</p></td>
+<td><p>max y-index of the wall</p></td>
+<td><p>0</p></td>
+</tr>
+<tr class="row-odd"><td><p>7</p></td>
+<td><p>y-velocity on the wall
+described by elements 4-6</p></td>
+<td><p>0</p></td>
+</tr>
+</tbody>
+</table>
+<p>A simple example which shows the effect of this internal wall is in <code class="docutils literal notranslate"><span class="pre">models/internalVelocityExample</span></code>.</p>
+</section>
+<section id="initial-conditions">
+<h2>Initial Conditions<a class="headerlink" href="#initial-conditions" title="Link to this heading">¶</a></h2>
+<p>The initial conditions for the simulation are set by applying material IDs and temperatures to the markers in <a class="reference internal" href="generated/models.simpleStokes.setup.initialize_markers.html#models.simpleStokes.setup.initialize_markers" title="models.simpleStokes.setup.initialize_markers"><code class="xref py py-func docutils literal notranslate"><span class="pre">models.simpleStokes.setup.initialize_markers()</span></code></a>.</p>
+<p>Within this function, the markers are distributed evenly across the domain with a small random displacement.  The user can then assign them a material type/ID and a temperature based on their position.</p>
+<p>For example, in the <code class="docutils literal notranslate"><span class="pre">lithosphereExtension</span></code> model, the different materials are assigned using depth, to give the layers of the crust and upper mantle.</p>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">Modelling Earth Systems</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="get_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="run.html">Running existing models</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Creating a new model</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#parameters">Parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#material-properties">Material Properties</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#boundary-conditions">Boundary Conditions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#internal-velocity-boundary">Internal velocity Boundary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#initial-conditions">Initial Conditions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="run.html" title="previous chapter">Running existing models</a></li>
+      <li>Next: <a href="api.html" title="next chapter">API</a></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2025, Charlotte Summers.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="_sources/setup.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

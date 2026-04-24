@@ -1,0 +1,6 @@
+output.visualisation.plotSummary
+================================
+
+.. currentmodule:: output.visualisation
+
+.. autofunction:: plotSummary

@@ -1,0 +1,6 @@
+solver.physics.StokesContinuitySolver.calculateResiduals
+========================================================
+
+.. currentmodule:: solver.physics.StokesContinuitySolver
+
+.. autofunction:: calculateResiduals

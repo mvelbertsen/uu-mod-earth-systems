@@ -1,0 +1,19 @@
+﻿solver.physics.markers\_fns
+===========================
+
+.. automodule:: solver.physics.markers_fns
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+   
+      advectMarkers
+      gridToMarker
+      markerViscosity
+      markersToGrid
+      subgridDiffusion
+      subgridStressChanges
+      updateMarkerErat
+   

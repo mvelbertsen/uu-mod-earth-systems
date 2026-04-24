@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>output.visualisation.plotMarkers_lithology &#8212; Modelling Earth Systems 0.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d1102ebc" />
+    <link rel="stylesheet" type="text/css" href="../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=27fed22d" />
+    <script src="../_static/documentation_options.js?v=2709fde1"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="output.visualisation.plotSummary" href="output.visualisation.plotSummary.html" />
+    <link rel="prev" title="output.visualisation.getMarkerPixelGrid" href="output.visualisation.getMarkerPixelGrid.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="output-visualisation-plotmarkers-lithology">
+<h1>output.visualisation.plotMarkers_lithology<a class="headerlink" href="#output-visualisation-plotmarkers-lithology" title="Link to this heading">¶</a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="output.visualisation.plotMarkers_lithology">
+<span class="sig-prename descclassname"><span class="pre">output.visualisation.</span></span><span class="sig-name descname"><span class="pre">plotMarkers_lithology</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">params</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">markers</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">grid</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ntstp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t_curr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">xlims</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ylims</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">aspect_ratio</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">height</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_vel_arrows</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#output.visualisation.plotMarkers_lithology" title="Link to this definition">¶</a></dt>
+<dd><p>Plot the lithology/material ID recorded by the markers.</p>
+<section id="parameters">
+<h2>Parameters<a class="headerlink" href="#parameters" title="Link to this heading">¶</a></h2>
+<dl class="simple">
+<dt>params<span class="classifier">Parameters object</span></dt><dd><p>Simulation’s parameters object.</p>
+</dd>
+<dt>markers<span class="classifier">Markers object</span></dt><dd><p>Contains all the marker values for each variable.</p>
+</dd>
+<dt>grid<span class="classifier">Grid object</span></dt><dd><p>Contains all the grid variables at the current time.</p>
+</dd>
+<dt>ntstp<span class="classifier">INT</span></dt><dd><p>Current timestep number.</p>
+</dd>
+<dt>t_curr<span class="classifier">FLOAT</span></dt><dd><p>Current time (s).</p>
+</dd>
+<dt>xlims<span class="classifier">TUPLE</span></dt><dd><p>Limits of plotting area in the x-direction.</p>
+</dd>
+<dt>ylims<span class="classifier">TUPLE</span></dt><dd><p>Limits of plotting area in the y-direction.</p>
+</dd>
+<dt>aspect_ratio<span class="classifier">FLOAT (OPTIONAL)</span></dt><dd><p>Option to manually set the aspect ratio of the plots.</p>
+</dd>
+<dt>height<span class="classifier">FLOAT (OPTIONAL)</span></dt><dd><p>Option to manually set height of an axis.</p>
+</dd>
+<dt>plot_vel_arrows<span class="classifier">BOOL (Optional)</span></dt><dd><p>Option to plot velocity arrows on the image, default is False.</p>
+</dd>
+</dl>
+</section>
+<section id="returns">
+<h2>Returns<a class="headerlink" href="#returns" title="Link to this heading">¶</a></h2>
+<p>None.</p>
+</section>
+</dd></dl>
+
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">Modelling Earth Systems</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../get_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../run.html">Running existing models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../setup.html">Creating a new model</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="solver.dataStructures.html">solver.dataStructures</a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver.physics.markers_fns.html">solver.physics.markers_fns</a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver.physics.grid_fns.html">solver.physics.grid_fns</a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver.physics.markerUtils.html">solver.physics.markerUtils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver.physics.StokesContinuitySolver.html">solver.physics.StokesContinuitySolver</a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver.physics.TemperatureSolver.html">solver.physics.TemperatureSolver</a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver.physics.boundaryConditions.html">solver.physics.boundaryConditions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver.main.html">solver.main</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="output.visualisation.html">output.visualisation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="models.common.html">models.common</a></li>
+<li class="toctree-l2"><a class="reference internal" href="models.simpleStokes.setup.html">models.simpleStokes.setup</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="../api.html">API</a><ul>
+  <li><a href="output.visualisation.html">output.visualisation</a><ul>
+      <li>Previous: <a href="output.visualisation.getMarkerPixelGrid.html" title="previous chapter">output.visualisation.getMarkerPixelGrid</a></li>
+      <li>Next: <a href="output.visualisation.plotSummary.html" title="next chapter">output.visualisation.plotSummary</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2025, Charlotte Summers.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../_sources/generated/output.visualisation.plotMarkers_lithology.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

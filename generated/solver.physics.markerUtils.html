@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>solver.physics.markerUtils &#8212; Modelling Earth Systems 0.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=d1102ebc" />
+    <link rel="stylesheet" type="text/css" href="../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=27fed22d" />
+    <script src="../_static/documentation_options.js?v=2709fde1"></script>
+    <script src="../_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="../_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="solver.physics.markerUtils.applyGridContrib" href="solver.physics.markerUtils.applyGridContrib.html" />
+    <link rel="prev" title="solver.physics.grid_fns.viscElastStress" href="solver.physics.grid_fns.viscElastStress.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="module-solver.physics.markerUtils">
+<span id="solver-physics-markerutils"></span><h1>solver.physics.markerUtils<a class="headerlink" href="#module-solver.physics.markerUtils" title="Link to this heading">¶</a></h1>
+<p>Low level functions for marker calculations, including marker-to-grid/grid-to-marker interpolation, and finding nearest node distances.</p>
+<p class="rubric">Functions</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="solver.physics.markerUtils.applyGridContrib.html#solver.physics.markerUtils.applyGridContrib" title="solver.physics.markerUtils.applyGridContrib"><code class="xref py py-obj docutils literal notranslate"><span class="pre">applyGridContrib</span></code></a>(field, xn, yn, dxm, dym)</p></td>
+<td><p>Applies the contributions for the surrounding grid nodes to a marker for a  given variable.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="solver.physics.markerUtils.applyGridWeights.html#solver.physics.markerUtils.applyGridWeights" title="solver.physics.markerUtils.applyGridWeights"><code class="xref py py-obj docutils literal notranslate"><span class="pre">applyGridWeights</span></code></a>(xnum, ynum, grid, grid0)</p></td>
+<td><p>Apply the weighting to the averaging of the grid values,  to complete the interpolation from markers in markersToGrid.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="solver.physics.markerUtils.applyMarkerContrib.html#solver.physics.markerUtils.applyMarkerContrib" title="solver.physics.markerUtils.applyMarkerContrib"><code class="xref py py-obj docutils literal notranslate"><span class="pre">applyMarkerContrib</span></code></a>(field, m_field, dxm, dym, ...)</p></td>
+<td><p>Applies the contribution to given field from a marker to the surrounding nodes based on the distance to the nodes.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="solver.physics.markerUtils.findNearestNode.html#solver.physics.markerUtils.findNearestNode" title="solver.physics.markerUtils.findNearestNode"><code class="xref py py-obj docutils literal notranslate"><span class="pre">findNearestNode</span></code></a>(gridx, gridy, xnum, ynum, ...)</p></td>
+<td><p>Find the index of the nearest top-left basic node.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="solver.physics.markerUtils.getMarkerNodeDistances.html#solver.physics.markerUtils.getMarkerNodeDistances" title="solver.physics.markerUtils.getMarkerNodeDistances"><code class="xref py py-obj docutils literal notranslate"><span class="pre">getMarkerNodeDistances</span></code></a>(markerx, markery, ...)</p></td>
+<td><p>Finds the distance to the nearest top-left node of a specified type for a given marker position.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">Modelling Earth Systems</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../get_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../run.html">Running existing models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../setup.html">Creating a new model</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../api.html">API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="solver.dataStructures.html">solver.dataStructures</a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver.physics.markers_fns.html">solver.physics.markers_fns</a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver.physics.grid_fns.html">solver.physics.grid_fns</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">solver.physics.markerUtils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver.physics.StokesContinuitySolver.html">solver.physics.StokesContinuitySolver</a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver.physics.TemperatureSolver.html">solver.physics.TemperatureSolver</a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver.physics.boundaryConditions.html">solver.physics.boundaryConditions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver.main.html">solver.main</a></li>
+<li class="toctree-l2"><a class="reference internal" href="output.visualisation.html">output.visualisation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="models.common.html">models.common</a></li>
+<li class="toctree-l2"><a class="reference internal" href="models.simpleStokes.setup.html">models.simpleStokes.setup</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="../api.html">API</a><ul>
+      <li>Previous: <a href="solver.physics.grid_fns.viscElastStress.html" title="previous chapter">solver.physics.grid_fns.viscElastStress</a></li>
+      <li>Next: <a href="solver.physics.markerUtils.applyGridContrib.html" title="next chapter">solver.physics.markerUtils.applyGridContrib</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2025, Charlotte Summers.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../_sources/generated/solver.physics.markerUtils.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

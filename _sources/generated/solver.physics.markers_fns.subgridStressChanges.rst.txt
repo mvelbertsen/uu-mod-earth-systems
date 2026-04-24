@@ -1,0 +1,6 @@
+solver.physics.markers\_fns.subgridStressChanges
+================================================
+
+.. currentmodule:: solver.physics.markers_fns
+
+.. autofunction:: subgridStressChanges

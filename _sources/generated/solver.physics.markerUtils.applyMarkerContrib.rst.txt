@@ -1,0 +1,6 @@
+solver.physics.markerUtils.applyMarkerContrib
+=============================================
+
+.. currentmodule:: solver.physics.markerUtils
+
+.. autofunction:: applyMarkerContrib

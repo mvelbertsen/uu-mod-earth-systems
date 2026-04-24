@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Modelling Earth Systems - Project code &#8212; Modelling Earth Systems 0.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d1102ebc" />
+    <link rel="stylesheet" type="text/css" href="_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=27fed22d" />
+    <script src="_static/documentation_options.js?v=2709fde1"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Getting Started" href="get_started.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+
+  
+  
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="modelling-earth-systems-project-code">
+<h1>Modelling Earth Systems - Project code<a class="headerlink" href="#modelling-earth-systems-project-code" title="Link to this heading">¶</a></h1>
+<p>This is a python reworking of the thermomechanical code developed in the book Numerical Geodynamic Modelling by Taras Gerya <a class="footnote-reference brackets" href="#id2" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a> .
+It uses finite differences on a staggered grid to solve the Stokes, continuity and temperature equations in 2D, with marker-in-cell adevection.</p>
+<aside class="footnote-list brackets">
+<aside class="footnote brackets" id="id2" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id1">1</a><span class="fn-bracket">]</span></span>
+<p>Gerya T. MATLAB program examples. In: Introduction to Numerical Geodynamic Modelling. Cambridge University Press; 2019:425-437. <a class="reference external" href="https://doi.org/10.1017/9781316534243.024">DOI</a></p>
+</aside>
+</aside>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="get_started.html">Getting Started</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="get_started.html#prerequistes">Prerequistes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="get_started.html#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="get_started.html#running-an-example-model">Running an Example Model</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="run.html">Running existing models</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="run.html#jit-compilation">jit compilation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="run.html#visualisation">Visualisation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="setup.html">Creating a new model</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="setup.html#parameters">Parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="setup.html#material-properties">Material Properties</a></li>
+<li class="toctree-l2"><a class="reference internal" href="setup.html#boundary-conditions">Boundary Conditions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="setup.html#internal-velocity-boundary">Internal velocity Boundary</a></li>
+<li class="toctree-l2"><a class="reference internal" href="setup.html#initial-conditions">Initial Conditions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="generated/solver.dataStructures.html">solver.dataStructures</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/solver.physics.markers_fns.html">solver.physics.markers_fns</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/solver.physics.grid_fns.html">solver.physics.grid_fns</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/solver.physics.markerUtils.html">solver.physics.markerUtils</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/solver.physics.StokesContinuitySolver.html">solver.physics.StokesContinuitySolver</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/solver.physics.TemperatureSolver.html">solver.physics.TemperatureSolver</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/solver.physics.boundaryConditions.html">solver.physics.boundaryConditions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/solver.main.html">solver.main</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/output.visualisation.html">output.visualisation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/models.common.html">models.common</a></li>
+<li class="toctree-l2"><a class="reference internal" href="generated/models.simpleStokes.setup.html">models.simpleStokes.setup</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="#">Modelling Earth Systems</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="get_started.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="run.html">Running existing models</a></li>
+<li class="toctree-l1"><a class="reference internal" href="setup.html">Creating a new model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="#">Documentation overview</a><ul>
+      <li>Next: <a href="get_started.html" title="next chapter">Getting Started</a></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2025, Charlotte Summers.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 9.1.0</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="_sources/index.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

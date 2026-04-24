@@ -1,0 +1,6 @@
+solver.physics.markers\_fns.markerViscosity
+===========================================
+
+.. currentmodule:: solver.physics.markers_fns
+
+.. autofunction:: markerViscosity
