@@ -76,7 +76,8 @@ def plotTemperature(grid, params, ntstp, t_curr, xlims, ylims, aspect_ratio=None
     axs = fig.subplots(1,1, sharex=True, sharey=True)
 
     # plot the temperature as colormap
-    im = axs.pcolor(X, Y, grid.T-273, shading='nearest', vmin=0, vmax=1400)
+    # im = axs.pcolor(X, Y, grid.T-273, shading='nearest', vmin=0, vmax=1400)
+    im = axs.pcolor(X, Y, grid.T-273, shading='nearest', vmin=-2.5, vmax=7.5)
     
     # if flag is true, plot the velocity arrows
     if plot_vel_arrows:
@@ -89,7 +90,8 @@ def plotTemperature(grid, params, ntstp, t_curr, xlims, ylims, aspect_ratio=None
     axs.set_title('Temperature (C)')                                             # set plot title
     axs.set(ylabel='y (m)', xlabel='x (m)', xlim=xlims, ylim=ylims)  # label the y-axis and x-axis
     #axs.invert_yaxis() 
-    fig.suptitle('Time: %.3f Myr'%(t_curr*1e-6/(365.25*24*3600)))
+    # fig.suptitle('Time: %.3f Myr'%(t_curr*1e-6/(365.25*24*3600)))
+    fig.suptitle('Time: %.3f yr'%(t_curr/(365.25*24*3600)))
     
     # save to file 
     fig.savefig('%s/%s/temp_%i.png'%(params.output_path, params.output_name, ntstp))
@@ -159,8 +161,8 @@ def plotSummary(grid, params, ntstp, t_curr, xlims, ylims, aspect_ratio=None, pl
 
     ###########################################################################
     # density
-    im = axs[0].pcolor(X, Y, grid.rho, shading='nearest', vmin=2200, vmax=3500)
-    fig.colorbar(im, ax=axs[0],pad=0.0)        # display colorbar
+    im = axs[0].pcolor(X, Y, grid.rho, shading='nearest', vmin=500, vmax=1500)#, vmin=2200, vmax=3500)
+    fig.colorbar(im, ax=axs[0],pad=0.0, extend='both')        # display colorbar
     axs[0].set_title('Density (kg/m3) ')       # set plot title
     axs[0].set(ylabel='y (m)', xlim=xlims, ylim=ylims)                 # label the y-axis (shared axis for x)
     
@@ -180,7 +182,7 @@ def plotSummary(grid, params, ntstp, t_curr, xlims, ylims, aspect_ratio=None, pl
 
     ###########################################################################
     # Viscosity
-    im = axs[1].pcolor(X, Y, np.log10(grid.eta_n),vmin=18, vmax=28)
+    im = axs[1].pcolor(X, Y, np.log10(grid.eta_n), vmin=12, vmax=20)#,vmin=18, vmax=28)
     fig.colorbar(im, ax=axs[1],pad=0.0)                 # display colorbar
     axs[1].set(ylabel='y (m)', xlim=xlims, ylim=ylims)                          # label the y-axis (shared axis for x)
     axs[1].set_title('Viscosity log10(Pa s)')           # set plot title
@@ -192,8 +194,8 @@ def plotSummary(grid, params, ntstp, t_curr, xlims, ylims, aspect_ratio=None, pl
 
     ###########################################################################
 	# Pressure
-    im = axs[2].pcolor(X, Y, grid.P, shading='flat',vmin=0.1e9,vmax=9e9)
-    fig.colorbar(im, ax=axs[2],pad=0.0)                 # display colorbar
+    im = axs[2].pcolor(X, Y, grid.P, shading='flat', vmin=0e6, vmax=3e6)#,vmin=0.1e9,vmax=9e9)
+    fig.colorbar(im, ax=axs[2],pad=0.0, extend='both')                 # display colorbar
     axs[2].set(ylabel='y (m)', xlabel='x (m)', xlim=xlims, ylim=ylims)          # label the x and y-axis
     axs[2].set_title('Pressure (Pa)')                   # set plot title
     
@@ -203,7 +205,8 @@ def plotSummary(grid, params, ntstp, t_curr, xlims, ylims, aspect_ratio=None, pl
         axs[2].clabel(cs, inline=True, fontsize=8, fmt='%d C')
 
 
-    fig.suptitle('Time: %.3f Myr'%(t_curr*1e-6/(365.25*24*3600)))
+    # fig.suptitle('Time: %.3f Myr'%(t_curr*1e-6/(365.25*24*3600)))
+    fig.suptitle('Time: %.3f yr'%(t_curr/(365.25*24*3600)))
     fig.savefig('%s/%s/summary_%i.png'%(params.output_path, params.output_name, ntstp))
     
 
@@ -417,7 +420,8 @@ def plotMarkers_lithology(params, markers, grid, ntstp, t_curr, xlims, ylims, as
         axs.quiver(X[::arrow_stp, ::arrow_stp], Y[::arrow_stp, ::arrow_stp],\
                       vxb[:grid.ynum,:][::arrow_stp, ::arrow_stp], np.flip(-vyb[:,:grid.xnum],0)[::arrow_stp, ::arrow_stp])	            
     
-    fig.suptitle('Time: %.3f Myr'%(t_curr*1e-6/(365.25*24*3600)))
+    # fig.suptitle('Time: %.3f Myr'%(t_curr*1e-6/(365.25*24*3600)))
+    fig.suptitle('Time: %.3f yr'%(t_curr/(365.25*24*3600)))
     fig.savefig('%s/%s/litho_%i.png'%(params.output_path, params.output_name, ntstp))
     
     
