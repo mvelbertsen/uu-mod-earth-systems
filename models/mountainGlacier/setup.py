@@ -27,7 +27,8 @@ def mountain_slope_curve(x, params):
     # return       2*params.bx  +                           0.15*x                                                   # straight slope
     # return ((ysize-params.bx) - (ysize-params.bx*3)/(xsize**2)*(x-xsize)**2)*0.5 + (1-0.5)*(params.bx*2 + 0.15*x)  # quadratic - less steep
     # return ((ysize-params.bx) - (ysize-params.bx*3)/(xsize**2)*(x-xsize)**2)*0.2 + (1-0.2)*(params.bx*2 + 0.15*x)  # quadratic - even less steep
-    return 700 * np.log10(0.001*x + 1) + 25                                                               # logarithmic
+    return 700 * np.log10(0.001*x + 1) + 25 +100                                                               # logarithmic
+    # return 0.16*x + 25   # straightslope
 
 
 def glacier_surface_curve(x, params):
@@ -36,7 +37,9 @@ def glacier_surface_curve(x, params):
 
     '''
 
-    return 5*params.ysize/(params.xsize**4)*x**4 + 3*params.bx
+    # return 5*params.ysize/(params.xsize**4)*x**4 + 3*params.bx
+    return 3500/(4000**4)*x**4 + 37.5 +100
+    # return 3500/(4000**4)*x**4 + 37.5*2  # thinner ice
 
 
 
@@ -69,8 +72,8 @@ def initializeModel():
     params = Parameters()
 
     # set resolution
-    xnum = 321   # 12.5 m (was set to 161)
-    ynum =  57   # 12.5 m (was set to 61)
+    xnum = 321   # 12.5 m
+    ynum = 57    # 12.5 m
 
 
     # instantiate/load material properties object
@@ -117,8 +120,8 @@ def initializeModel():
 
     ############################################################################
     # create markers object
-    mnumx = xnum*4   # (was set at 400)
-    mnumy = ynum*4   # (was set at 300)
+    mnumx = xnum*4
+    mnumy = ynum*4
     markers = Markers(mnumx, mnumy)
 
     # initialize markers
@@ -165,18 +168,18 @@ def initialize_markers(markers, materials, params):
             # bedrock
             if markers.y[mm] >= mountain_slope_curve(markers.x[mm], params) or markers.y[mm] >= params.ysize-params.by:
                 markers.id[mm] = 1
-                markers.T[mm]  = 273    # 0 °C
+                markers.T[mm]  = 293    # 20 °C
             
             # glacier   # try to reproduce glacier shape from SIA
             elif markers.y[mm] >= glacier_surface_curve(markers.x[mm], params):
                 markers.id[mm] = 2
-                markers.T[mm]  = 273    # 0 °C
+                markers.T[mm]  = 273 #-15    # 0 °C
 
             # air         
             else: 
-                dtdy = 6.5/1000 # approximate environmental adiabetic lapse rate for the air °C/m
+                # dtdy = 6.5/1000 # approximate environmental adiabetic lapse rate for the air °C/m
                 markers.id[mm] = 0 
-                markers.T[mm] = 273 - dtdy*(params.ysize - markers.y[mm])
+                markers.T[mm] = 283 #- dtdy*(params.ysize - markers.y[mm]) # 10 °C
 
             # update marker index
             mm +=1
@@ -241,44 +244,7 @@ def updateMarkers(markers, params, grid):
 
         # Update lower bound for the next iteration
         low_x = current_x
-    
 
-    # # Define range within which to change markers
-    # tol = params.bx
-    # bins = np.arange(0, params.xsize+tol, tol)
-    # inds = np.digitize(markers.x, bins)
-
-    # # Initialize a list of lists to hold markers for each x-bin
-    # num_x_bins = len(bins)
-    # x_to_markers = [[] for _ in range(num_x_bins)]
-
-    # # Populate x_to_markers: list of marker indices for each x-bin
-    # for m in range(markers.num):
-    #     x_bin = inds[m]
-    #     x_to_markers[x_bin].append(m)
-    
-    # # Find the furthest x-extent of the glacier
-    # x_max_glacier = np.max(markers.x[markers.id == 2]) if np.any(markers.id == 2) else 0.0
-
-    # # Vertical scan for each x-bin
-    # for x_bin in range(num_x_bins):
-    #     # Sort markers in this x-bin by y-position (top to bottom)
-    #     sorted_markers = sorted(x_to_markers[x_bin], key=lambda m: markers.y[m])
-
-    #     found_glacier = False
-    #     for m in sorted_markers:
-    #         if markers.id[m] == 1:  # Bedrock: stop scanning
-    #             break
-    #         if markers.id[m] == 2:  # Glacier marker
-    #             found_glacier = True
-    #         elif markers.id[m] == 0 and found_glacier:  # Air marker below glacier
-    #             # markers.id[m] = 2
-    #             # markers.T[m] = 273.0 + 10.0  # Temporary temperature for debugging
-    #             if markers.x[m] < x_max_glacier:
-    #                 markers.id[m] = 2
-    #                 markers.T[m] = 273.0 + 10.0  # Temporary temperature for debugging
-
-    
 
 
 def updateGrid(params, grid, t_curr, timestep, BC_bot):
@@ -545,25 +511,25 @@ class Parameters():
         self.Rgas = 8.314                       # gas constant
         
         # physical model setup
-        self.xsize = 4000 #400000
-        self.ysize = 700 #300000
-        self.T_min = 273                        # temperature at the top face of the model (K)
+        self.xsize = 4000
+        self.ysize = 700
+        self.T_min = 273+10                     # temperature at the top face of the model (K)
         
         # viscosity model
-        self.eta_min = 1e5 #1e18                     # minimum viscosity
+        self.eta_min = 1e5                      # minimum viscosity
         self.eta_max = 1e25                     # maximum viscosity
-        self.stress_min = 1e5 #1e4                   # minimum stress
+        self.stress_min = 1e5                   # minimum stress
         self.eta_wt = 0                         # viscosity weighting, for (old?) visco-plastic model
-        self.max_pow_law = 150                  # maximum power law exponent in visc model
+        self.max_pow_law = 5                    # maximum power law exponent in visc model
         
         self.v_ext = 2.0/(100*365.25*24*3600)   # extension velocity of the grid (cm/yr)
         
         # timestepping
-        self.t_end = 1000*365.25*24*3600 #72e3/self.v_ext            # end time
+        self.t_end = 1000*365.25*24*3600        # end time
         self.ntstp_max = 360                    # maximum number of timesteps
         self.Temp_stp_max = 20                  # maximum number of temperature substeps
         
-        self.tstp_max = 365.25*24*3600 #1e4*365.25*24*3600      # maximum timestep
+        self.tstp_max = 365.25*24*3600          # maximum timestep
         
         # marker options
         self.marker_max = 0.3                   # maximum marker movement per timestep (fraction of av. grid step)
@@ -580,9 +546,9 @@ class Parameters():
         self.adia_yn = 1                        # use adiabatic heating?
         
         # output options
-        self.save_output = 50                        # number of steps between output files
-        self.save_fig = 30 #10                           # number of steps between figure output
-        self.output_name = "mountainGlacier"
+        self.save_output = 50                   # number of steps between output files
+        self.save_fig = 30                      # number of steps between figure output
+        self.output_name = "mountainGlacier/00ref"
         self.output_path = "../../Results/figures"
         
                 
@@ -591,15 +557,15 @@ class Parameters():
         
         # grid spacing params
         
-        self.bx = self.xsize/(321-1) #2000                          # x-grid spacing in high res area
-        self.by = self.ysize/(57-1) #2000                          # y-grid spacing in high res area
-        self.Nx = 0 #30                            # number of unevenly spaced grid points either side of high res zone
-        self.Ny = 0 #20                            # number of unvenly spaced grid points below high res zone
-        self.non_uni_xsize = 0 #100000             # physical x-size of non-uniform grid region
-        self.const = 1 #0                          # flag which determines whether grid remains constant or not
+        self.bx = self.xsize/(321-1)               # x-grid spacing in high res area
+        self.by = self.ysize/(57-1)                # y-grid spacing in high res area
+        self.Nx = 0                                # number of unevenly spaced grid points either side of high res zone
+        self.Ny = 0                                # number of unvenly spaced grid points below high res zone
+        self.non_uni_xsize = 0                     # physical x-size of non-uniform grid region
+        self.const = 1                             # flag which determines whether grid remains constant or not
         
 
         self.viscbox = ViscBox(0)
 
-        self.T_top = 273 - (6.5/1000)*self.ysize #self.T_min                 # temperature at the top face of the model (K)
-        self.T_bot = 273 #1750                       # temperature at the bottom face of the model (K)
+        self.T_top = 273+10 #- (6.5/1000)*self.ysize #self.T_min                 # temperature at the top face of the model (K)
+        self.T_bot = 273+20 #1750                       # temperature at the bottom face of the model (K)

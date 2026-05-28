@@ -231,6 +231,112 @@ def makePlots(grid, markers, params, ntstp, t_curr):
     plotMarkers_lithology(params, markers, grid, ntstp, t_curr, xlims, ylims, aspect_ratio=3)
     plotMarkers_strain(params, markers, grid, ntstp, t_curr)
     plotMarkers_stress(params, markers, grid, ntstp, t_curr)
+    Plot_Vis_strain_stress(params, markers, grid, ntstp, t_curr, xlims, ylims, aspect_ratio=3, plotTempContours=True, temp_levels=[-10, -5, 0, 5, 10, 25, 50, 100, 500])
+
+def Plot_Vis_strain_stress(params, markers, grid, ntstp, t_curr, xlims, ylims, aspect_ratio=3, plotTempContours=True, temp_levels=[-10, -5, 0, 5, 10, 25, 50, 100, 500]):
+
+    '''
+    Plot the stress and strain components recorded by the markers. Viscosity recorded on the grid
+
+    Parameters
+    ----------
+    params : Parameters object
+        Simulation's parameters object.
+    markers : Markers object
+        Contains all the marker values for each variable.
+    grid : Grid object
+        Contains all the grid variables at the current time.
+    ntstp : INT
+        Current timestep number.
+    t_curr : FLOAT
+        Current time (s).
+
+    Returns
+    -------
+    None.
+
+    '''
+    # For the viscosity plot
+    X, Y = np.meshgrid(grid.x, grid.y)
+    
+    # get aspect ratio
+    xlen = abs(xlims[1] - xlims[0])
+    ylen = abs(ylims[1] - ylims[0])
+    
+    if aspect_ratio == None:
+        asp_rat = xlen/ylen
+    else:
+        asp_rat = aspect_ratio
+    
+    if asp_rat <= 1:
+        # add some padding bc. of axis/cb taking up space in x
+        pad = 2.0
+    else:
+        pad = 0.0
+    
+    
+    # set ysize of each figure
+    y_fig = 6
+    
+    # number of plots vertically
+    y_plots = 3
+    
+    # create figure
+    fig = figure.Figure(figsize=(asp_rat*y_fig + pad, y_fig*y_plots), constrained_layout=True)
+    axs = fig.subplots(3,1, sharex=True, sharey=True)
+    
+    # check that if temp contours are switched on, values have been provided
+    if plotTempContours and temp_levels==None:
+        raise ValueError("Plot temperature contours was set to true but no contour values were provided.  Please set temp_levels to a list of temperaure values at which contours should be plotted")
+    
+    # Viscosity
+    im = axs[0].pcolor(X, Y, np.log10(grid.eta_n),vmin=12, vmax=20)
+    fig.colorbar(im, ax=axs[0],pad=0.0)                 # display colorbar
+    axs[0].set(ylabel='y (m)', xlim=xlims, ylim=ylims)                          # label the y-axis (shared axis for x)
+    axs[0].set_title('Viscosity log10(Pa s)')           # set plot title
+    
+    # Add temperature contours
+    if plotTempContours:
+        cs = axs[0].contour(X, Y, grid.T-273, levels=temp_levels, colors='w', linewidths=0.8)
+        axs[0].clabel(cs, inline=True, fontsize=8, fmt='%d C')
+
+
+    # get the mapping of markers to pixel positions
+    marker_map = getMarkerPixelGrid(params, markers, grid, 401)
+    box_size = [xlims[0], xlims[1], ylims[0],ylims[1]]
+    
+    # get the specific fields we want here
+    mark_sigmaxx = getMarkerField(marker_map, markers.sigmaxx)
+    mark_sigmaxy = getMarkerField(marker_map, markers.sigmaxy)
+    mark_sigmaii = np.sqrt(mark_sigmaxx**2 + mark_sigmaxy**2)
+
+    ###########################################################################
+    # plot the stress
+    im = axs[1].imshow(mark_sigmaii, origin='upper', aspect='auto', extent=box_size, vmin=0, vmax=1.75e5)             
+    fig.colorbar(im, ax=axs[1],pad=0.0, extend='both')
+    axs[1].set_title('$\\sigma_{ii}$ (Pa)')
+    axs[1].set(ylabel='y (m)', xlim=xlims, ylim=ylims)
+    
+    # Add temperature contours
+    if plotTempContours:
+        cs = axs[1].contour(X, Y, grid.T-273, levels=temp_levels, colors='w', linewidths=0.8)
+        axs[1].clabel(cs, inline=True, fontsize=8, fmt='%d C')
+
+    # Plot accumulated strain
+    mark_gii = getMarkerField(marker_map, markers.gII)
+    im = axs[2].imshow(np.log10(mark_gii), origin='upper', aspect='auto', extent=box_size, vmin=-5, vmax=1.5)
+    
+    fig.colorbar(im, ax=axs[2],pad=0.0, extend='both')
+    axs[2].set_title('Total strain (log10)')
+    axs[2].set(xlabel='x (m)', ylabel = 'y (m)', xlim=xlims, ylim=ylims) 
+
+    # Add temperature contours
+    if plotTempContours:
+        cs = axs[2].contour(X, Y, grid.T-273, levels=temp_levels, colors='w', linewidths=0.8)
+        axs[2].clabel(cs, inline=True, fontsize=8, fmt='%d C')
+
+    fig.suptitle('Time: %.3f Myr'%(t_curr*1e-6/(365.25*24*3600)))
+    fig.savefig('%s/%s/allthree_%i.png'%(params.output_path, params.output_name, ntstp))
 
 
 

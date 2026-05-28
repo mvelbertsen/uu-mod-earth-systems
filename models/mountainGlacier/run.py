@@ -131,7 +131,7 @@ for nt in range(0, params.ntstp_max):
     # Make any model-specific adjustments 
     # eg. for a moving grid, update the grid positions
     # updateGrid(params, grid, time_curr, timestep, BC.B_bottom)
-    updateMarkers(markers, params, grid)
+    # updateMarkers(markers, params, grid)
 
     
         
