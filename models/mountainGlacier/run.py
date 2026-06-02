@@ -129,8 +129,7 @@ for nt in range(0, params.ntstp_max):
     
     ###########################################################################
     # Make any model-specific adjustments 
-    # eg. for a moving grid, update the grid positions
-    # updateGrid(params, grid, time_curr, timestep, BC.B_bottom)
+    # Update air markers trapped below glacier
     # updateMarkers(markers, params, grid)
 
     
