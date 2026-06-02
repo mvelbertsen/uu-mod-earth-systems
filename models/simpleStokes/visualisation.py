@@ -35,7 +35,7 @@ def makePlots(grid, markers, params, ntstp, t_curr):
     ylims = (params.ysize,0)
     
     
-    plotSummary(grid, params, ntstp, t_curr, xlims, ylims)
+    plotSummary(grid, params, ntstp, t_curr, xlims, ylims, rhomin=3200, rhomax=3300, vmin=19, vmax=21, Pmin=1e6, Pmax=1e9)
     plotMarkers_lithology(params, markers, grid, ntstp, t_curr, xlims, ylims, height=6, plot_vel_arrows=True)
     
     

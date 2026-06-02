@@ -14,7 +14,8 @@ from solver.physics.grid_fns import basicGridVelocities
 ###############################################################################
 # fns for plotting from the Grid
 
-def plotTemperature(grid, params, ntstp, t_curr, xlims, ylims, aspect_ratio=None, height=None, plot_vel_arrows=False, arrow_stp = 5):
+def plotTemperature(grid, params, ntstp, t_curr, xlims, ylims, 
+                    aspect_ratio=None, height=None, plot_vel_arrows=False, arrow_stp = 5, Tmin=0.0, Tmax=1400.0):
     '''
     Plot a single variable as a colormap, here it is the temperature but this serves as 
     a template for making simple plots of simulation output. It includes the option to
@@ -38,7 +39,10 @@ def plotTemperature(grid, params, ntstp, t_curr, xlims, ylims, aspect_ratio=None
         Flag indicating if velocity arrows should be added to the plot.  Defualt is False.
     arrow_stp : INT (OPTIONAL)
         Number of grid points between each velocity arrow. Default is 5.
-
+    Tmin : FLOAT (OPTIONAL)
+        Minimum temperature on the colorbar.
+    Tmax : FLOAT (OPTIONAL)
+        Maximum temperature on the colorbar.
     Returns
     -------
     None.
@@ -76,7 +80,7 @@ def plotTemperature(grid, params, ntstp, t_curr, xlims, ylims, aspect_ratio=None
     axs = fig.subplots(1,1, sharex=True, sharey=True)
 
     # plot the temperature as colormap
-    im = axs.pcolor(X, Y, grid.T-273, shading='nearest', vmin=0, vmax=1400)
+    im = axs.pcolor(X, Y, grid.T-273, shading='nearest', vmin=Tmin, vmax=Tmax)
     
     # if flag is true, plot the velocity arrows
     if plot_vel_arrows:
@@ -95,7 +99,9 @@ def plotTemperature(grid, params, ntstp, t_curr, xlims, ylims, aspect_ratio=None
     fig.savefig('%s/%s/temp_%i.png'%(params.output_path, params.output_name, ntstp))
 
 
-def plotSummary(grid, params, ntstp, t_curr, xlims, ylims, aspect_ratio=None, plotTempContours=False, temp_levels=None):
+def plotSummary(grid, params, ntstp, t_curr, xlims, ylims,
+                aspect_ratio=None, plotTempContours=False, temp_levels=None,
+                rhomin=2200, rhomax=3500, vmin=18, vmax=28, Pmin=1.0e8, Pmax=.09e9):
     '''
     Plots several simulation variables in a grid, here we use density, viscosity
     and pressure with velocity arrows on the density plot and optional temperature contours.
@@ -117,6 +123,18 @@ def plotSummary(grid, params, ntstp, t_curr, xlims, ylims, aspect_ratio=None, pl
     temp_levels : LIST (OPTIONAL)
         If plotTempContours == True, this list specifies the temperature values
         at which to plot contours.
+    rhomin : FLOAT (OPTIONAL)
+        minimum colorbar value for density plot.
+    rhomax : FLOAT (OPTIONAL)
+        maximum colorbar value for density plot.
+    vmin : FLOAT (OPTIONAL)
+        minimum colorbar value for viscosity plot (scale is logarithmic).
+    vmax : FLOAT (OPTIONAL)
+        maximum colorbar value for viscosity plot (scale is logarithmic).
+    Pmin : FLOAT (OPTIONAL)
+        minimum colorbar value for pressure plot.
+    Pmax : FLOAT (OPTIONAL)
+        maximum colorbar value for pressure plot.
 
     Returns
     -------
@@ -159,7 +177,7 @@ def plotSummary(grid, params, ntstp, t_curr, xlims, ylims, aspect_ratio=None, pl
 
     ###########################################################################
     # density
-    im = axs[0].pcolor(X, Y, grid.rho, shading='nearest', vmin=2200, vmax=3500)
+    im = axs[0].pcolor(X, Y, grid.rho, shading='nearest', vmin=rhomin, vmax=rhomax)
     fig.colorbar(im, ax=axs[0],pad=0.0)        # display colorbar
     axs[0].set_title('Density (kg/m3) ')       # set plot title
     axs[0].set(ylabel='y (m)', xlim=xlims, ylim=ylims)                 # label the y-axis (shared axis for x)
@@ -180,7 +198,7 @@ def plotSummary(grid, params, ntstp, t_curr, xlims, ylims, aspect_ratio=None, pl
 
     ###########################################################################
     # Viscosity
-    im = axs[1].pcolor(X, Y, np.log10(grid.eta_n),vmin=18, vmax=28)
+    im = axs[1].pcolor(X, Y, np.log10(grid.eta_n),vmin=vmin, vmax=vmax)
     fig.colorbar(im, ax=axs[1],pad=0.0)                 # display colorbar
     axs[1].set(ylabel='y (m)', xlim=xlims, ylim=ylims)                          # label the y-axis (shared axis for x)
     axs[1].set_title('Viscosity log10(Pa s)')           # set plot title
@@ -192,7 +210,7 @@ def plotSummary(grid, params, ntstp, t_curr, xlims, ylims, aspect_ratio=None, pl
 
     ###########################################################################
 	# Pressure
-    im = axs[2].pcolor(X, Y, grid.P, shading='flat',vmin=0.1e9,vmax=9e9)
+    im = axs[2].pcolor(X, Y, grid.P, shading='flat',vmin=Pmin, vmax=Pmax)
     fig.colorbar(im, ax=axs[2],pad=0.0)                 # display colorbar
     axs[2].set(ylabel='y (m)', xlabel='x (m)', xlim=xlims, ylim=ylims)          # label the x and y-axis
     axs[2].set_title('Pressure (Pa)')                   # set plot title
@@ -336,7 +354,8 @@ def getMarkerField(mark_nums, markers_field):
 
 
 
-def plotMarkers_lithology(params, markers, grid, ntstp, t_curr, xlims, ylims, aspect_ratio=None, height=None, plot_vel_arrows=False):
+def plotMarkers_lithology(params, markers, grid, ntstp, t_curr, xlims, ylims, 
+                          aspect_ratio=None, height=None, plot_vel_arrows=False, title="Lithology"):
     '''
     Plot the lithology/material ID recorded by the markers.
 
@@ -362,6 +381,8 @@ def plotMarkers_lithology(params, markers, grid, ntstp, t_curr, xlims, ylims, as
         Option to manually set height of an axis.
     plot_vel_arrows : BOOL (Optional)
         Option to plot velocity arrows on the image, default is False.
+    title : STR (OPTIONAL)
+        Title to give to plot. Default is "Lithology".
     
     Returns
     -------
@@ -407,7 +428,7 @@ def plotMarkers_lithology(params, markers, grid, ntstp, t_curr, xlims, ylims, as
     # plot the lithology as colormap
     im = axs.imshow(mark_com, origin='upper', aspect='auto', extent=[xlims[0], xlims[1], ylims[0],ylims[1]])
     fig.colorbar(im, ax=axs,pad=0.0)
-    axs.set_title('Lithology') 
+    axs.set_title(title) 
     axs.set(ylabel='y (m)', xlabel ='x (m)', xlim=xlims, ylim=ylims)               
 
     # add velocity arrows, not at every cell, step sets the spacing
