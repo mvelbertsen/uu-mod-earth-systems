@@ -35,9 +35,9 @@ def makePlots(grid, markers, params, ntstp, t_curr):
     ylims = (params.ysize,0)
     
     
-    plotSummary(grid, params, ntstp, t_curr, xlims, ylims)
+    plotSummary(grid, params, ntstp, t_curr, xlims, ylims, rhomin=3200, rhomax=3300, vmin=19, vmax=21)
     plotMarkers_lithology(params, markers, grid, ntstp, t_curr, xlims, ylims, height=6)
-    plotTemperature(grid, params, ntstp, t_curr, xlims, ylims, height=6)
+    plotTemperature(grid, params, ntstp, t_curr, xlims, ylims, height=6, Tmin=1000, Tmax=1100)
 
 
     
