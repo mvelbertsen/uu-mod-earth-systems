@@ -24,11 +24,7 @@ def mountain_slope_curve(x, params):
 
     '''
 
-    # return       2*params.bx  +                           0.15*x                                                   # straight slope
-    # return ((ysize-params.bx) - (ysize-params.bx*3)/(xsize**2)*(x-xsize)**2)*0.5 + (1-0.5)*(params.bx*2 + 0.15*x)  # quadratic - less steep
-    # return ((ysize-params.bx) - (ysize-params.bx*3)/(xsize**2)*(x-xsize)**2)*0.2 + (1-0.2)*(params.bx*2 + 0.15*x)  # quadratic - even less steep
-    return 700 * np.log10(0.001*x + 1) + 25 +100                                                               # logarithmic
-    # return 0.16*x + 25   # straightslope
+    return params.ysize - 100.
 
 
 def glacier_surface_curve(x, params):
@@ -37,8 +33,8 @@ def glacier_surface_curve(x, params):
 
     '''
 
-    # return 5*params.ysize/(params.xsize**4)*x**4 + 3*params.bx
-    return 3500/(4000**4)*x**4 + 37.5 +100
+    # return 3500/(4000**4)*x**4 + 137.5  + (-x*0.32 + 475)   # steep
+    return 3500/(4000**4)*x**4 + 137.5  + (-x*0.16 + 200)
     # return 3500/(4000**4)*x**4 + 37.5*2  # thinner ice
 
 
@@ -72,8 +68,8 @@ def initializeModel():
     params = Parameters()
 
     # set resolution
-    xnum = 321   # 12.5 m
-    ynum = 57    # 12.5 m
+    xnum = 321 #401   # 321   # 12.5 m
+    ynum = 33  #41    # 33    # 12.5 m
 
 
     # instantiate/load material properties object
@@ -94,12 +90,7 @@ def initializeModel():
 
     # manually set the bottom, left and right boundaries to include the grid velocity
     BC.B_bottom[:,1] = 1
-    # BC.B_bottom[:,2] = -params.v_ext/params.xsize * params.ysize
-
-    # BC.B_left[:,0] = -params.v_ext/2
     BC.B_left[:,3] = 1
-
-    # BC.B_right[:,0] = params.v_ext/2
     BC.B_right[:,3] = 1
 
     # temperature BCs
@@ -506,13 +497,15 @@ class Parameters():
         # main parameters, required by all simulations
         
         # physical constants
-        self.gx = 0.0                           # x-direction gravitational acc
-        self.gy = 9.81                          # y-direction gravitational acc
+        theta   = np.arctan(0.16/1.)            # standard
+        # theta   = np.arctan(0.32/1.)            # steep
+        self.gx = 9.81*np.sin(theta)            # x-direction gravitational acc
+        self.gy = 9.81*np.cos(theta)            # y-direction gravitational acc
         self.Rgas = 8.314                       # gas constant
         
         # physical model setup
         self.xsize = 4000
-        self.ysize = 700
+        self.ysize = 700-300
         self.T_min = 273+10                     # temperature at the top face of the model (K)
         
         # viscosity model
@@ -548,7 +541,7 @@ class Parameters():
         # output options
         self.save_output = 50                   # number of steps between output files
         self.save_fig = 30                      # number of steps between figure output
-        self.output_name = "mountainGlacier/00ref"
+        self.output_name = "mountainGlacier/00reftilt2"
         self.output_path = "../../Results/figures"
         
                 
@@ -558,12 +551,11 @@ class Parameters():
         # grid spacing params
         
         self.bx = self.xsize/(321-1)               # x-grid spacing in high res area
-        self.by = self.ysize/(57-1)                # y-grid spacing in high res area
+        self.by = self.ysize/(33-1)                # y-grid spacing in high res area
         self.Nx = 0                                # number of unevenly spaced grid points either side of high res zone
         self.Ny = 0                                # number of unvenly spaced grid points below high res zone
         self.non_uni_xsize = 0                     # physical x-size of non-uniform grid region
         self.const = 1                             # flag which determines whether grid remains constant or not
-        
 
         self.viscbox = ViscBox(0)
 
