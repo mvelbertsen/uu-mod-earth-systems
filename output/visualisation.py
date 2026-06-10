@@ -182,7 +182,7 @@ def plotSummary(grid, params, ntstp, t_curr, xlims, ylims, aspect_ratio=None, pl
 
     ###########################################################################
     # Viscosity
-    im = axs[1].pcolor(X, Y, np.log10(grid.eta_n), vmin=12, vmax=20)#,vmin=18, vmax=28)
+    im = axs[1].pcolor(X, Y, np.log10(grid.eta_n), vmin=10, vmax=15)#,vmin=18, vmax=28)
     fig.colorbar(im, ax=axs[1],pad=0.0)                 # display colorbar
     axs[1].set(ylabel='y (m)', xlim=xlims, ylim=ylims)                          # label the y-axis (shared axis for x)
     axs[1].set_title('Viscosity log10(Pa s)')           # set plot title
@@ -194,7 +194,7 @@ def plotSummary(grid, params, ntstp, t_curr, xlims, ylims, aspect_ratio=None, pl
 
     ###########################################################################
 	# Pressure
-    im = axs[2].pcolor(X, Y, grid.P, shading='flat', vmin=0e6, vmax=3e6)#,vmin=0.1e9,vmax=9e9)
+    im = axs[2].pcolor(X, Y, grid.P, shading='flat', vmin=0e6, vmax=2.4e6)#,vmin=0.1e9,vmax=9e9)
     fig.colorbar(im, ax=axs[2],pad=0.0, extend='both')                 # display colorbar
     axs[2].set(ylabel='y (m)', xlabel='x (m)', xlim=xlims, ylim=ylims)          # label the x and y-axis
     axs[2].set_title('Pressure (Pa)')                   # set plot title
@@ -408,7 +408,8 @@ def plotMarkers_lithology(params, markers, grid, ntstp, t_curr, xlims, ylims, as
     X, Y = np.meshgrid(grid.x, grid.y)
 
     # plot the lithology as colormap
-    im = axs.imshow(mark_com, origin='upper', aspect='auto', extent=[xlims[0], xlims[1], ylims[0],ylims[1]])
+    # im = axs.imshow(mark_com, origin='upper', aspect='auto', extent=[xlims[0], xlims[1], ylims[0],ylims[1]])
+    im = axs.scatter(markers.x, markers.y, c=markers.id)#, origin='upper', aspect='auto', extent=[xlims[0], xlims[1], ylims[0],ylims[1]]))
     fig.colorbar(im, ax=axs,pad=0.0)
     axs.set_title('Lithology') 
     axs.set(ylabel='y (m)', xlabel ='x (m)', xlim=xlims, ylim=ylims)               

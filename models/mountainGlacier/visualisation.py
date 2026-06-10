@@ -62,7 +62,7 @@ def plotMarkers_stress(params, markers, grid, ntstp, t_curr):
 
     ###########################################################################
     # plot the stress
-    im = axs[0].imshow(mark_sigmaii, origin='upper', aspect='auto', extent=box_size, vmin=0, vmax=1.75e5)             
+    im = axs[0].imshow(mark_sigmaii, origin='upper', aspect='auto', extent=box_size, vmin=0, vmax=1.2e5)             
     fig.colorbar(im, ax=axs[0],pad=0.0, extend='both')
     axs[0].set_title('$\\sigma_{ii}$ (Pa)')
     axs[0].set(ylabel='y (m)', xlim=xlims, ylim=ylims)
@@ -73,7 +73,7 @@ def plotMarkers_stress(params, markers, grid, ntstp, t_curr):
     
     ###########################################################################
     # plot normal stress components
-    im = axs[1].imshow(mark_sigmaxx, origin='upper', aspect='auto', extent=box_size, vmin=0, vmax=1e5)
+    im = axs[1].imshow(mark_sigmaxx, origin='upper', aspect='auto', extent=box_size, vmin=0, vmax=3.5e4)
     fig.colorbar(im, ax=axs[1],pad=0.0, extend='both') 
     axs[1].set_title('$\\sigma_{xx}$ (Pa)') 
     axs[1].set(ylabel = 'y (m)', xlim=xlims, ylim=ylims)
@@ -84,7 +84,7 @@ def plotMarkers_stress(params, markers, grid, ntstp, t_curr):
     
     ###########################################################################
     # plot shear stress components
-    im = axs[2].imshow(mark_sigmaxy, origin='upper', aspect='auto', extent=box_size, vmin=-4e4, vmax=3e4)
+    im = axs[2].imshow(mark_sigmaxy, origin='upper', aspect='auto', extent=box_size, vmin=-6e4, vmax=5e4)
     fig.colorbar(im, ax=axs[2],pad=0.0, extend='both')     
     axs[2].set_title('$\\sigma_{xy}$ (Pa)')
     axs[2].set(xlabel='x (m)', ylabel = 'y (m)', xlim=xlims, ylim=ylims)   
@@ -143,7 +143,7 @@ def plotMarkers_strain(params, markers, grid, ntstp, t_curr):
     ###########################################################################
     # plot the normal strain rate components
     mark_epsxx = getMarkerField(marker_map, markers.epsxx)
-    im = axs[0].imshow(mark_epsxx, origin='upper', aspect='auto', extent=box_size, vmin=-2.5e-9, vmax=2.5e-9)
+    im = axs[0].imshow(mark_epsxx, origin='upper', aspect='auto', extent=box_size, vmin=-2.5e-9, vmax=5e-9)
     
     fig.colorbar(im, ax=axs[0],pad=0.0, extend='both')
     axs[0].set_title('$\\dot\\epsilon_{xx}$ (1/s)')
@@ -157,7 +157,7 @@ def plotMarkers_strain(params, markers, grid, ntstp, t_curr):
     ###########################################################################
     # plot the shear strain rate components
     mark_epsxy = getMarkerField(marker_map, markers.epsxy)
-    im = axs[1].imshow(mark_epsxy, origin='upper', aspect='auto', extent=box_size, vmin=-5.5e-9, vmax=2e-9)
+    im = axs[1].imshow(mark_epsxy, origin='upper', aspect='auto', extent=box_size, vmin=-1e-8, vmax=1e-8)
     
     fig.colorbar(im, ax=axs[1],pad=0.0, extend='both')
     axs[1].set_title('$\\dot\\epsilon_{xy}$ (1/s)')
@@ -171,7 +171,7 @@ def plotMarkers_strain(params, markers, grid, ntstp, t_curr):
     ###########################################################################
     # plot normal stress components
     mark_epsii = np.sqrt(mark_epsxy**2+mark_epsxy**2)
-    im = axs[2].imshow(mark_epsii, origin='upper', aspect='auto', extent=box_size, vmin=0e-9, vmax=8e-9)
+    im = axs[2].imshow(mark_epsii, origin='upper', aspect='auto', extent=box_size, vmin=0e-9, vmax=5e-8)
     
     fig.colorbar(im, ax=axs[2],pad=0.0, extend='both')
     axs[2].set_title('$\\dot \\epsilon_{ii}$ (1/s)')
@@ -185,7 +185,7 @@ def plotMarkers_strain(params, markers, grid, ntstp, t_curr):
     ###########################################################################
     # Plot accumulated strain
     mark_gii = getMarkerField(marker_map, markers.gII)
-    im = axs[3].imshow(np.log10(mark_gii), origin='upper', aspect='auto', extent=box_size, vmin=-5, vmax=1.5)
+    im = axs[3].imshow(np.log10(mark_gii), origin='upper', aspect='auto', extent=box_size, vmin=-2.5, vmax=2)
     
     fig.colorbar(im, ax=axs[3],pad=0.0, extend='both')
     axs[3].set_title('Total strain (log10)')
@@ -290,7 +290,7 @@ def Plot_Vis_strain_stress(params, markers, grid, ntstp, t_curr, xlims, ylims, a
         raise ValueError("Plot temperature contours was set to true but no contour values were provided.  Please set temp_levels to a list of temperaure values at which contours should be plotted")
     
     # Viscosity
-    im = axs[0].pcolor(X, Y, np.log10(grid.eta_n),vmin=12, vmax=20)
+    im = axs[0].pcolor(X, Y, np.log10(grid.eta_n),vmin=10, vmax=15)
     fig.colorbar(im, ax=axs[0],pad=0.0)                 # display colorbar
     axs[0].set(ylabel='y (m)', xlim=xlims, ylim=ylims)                          # label the y-axis (shared axis for x)
     axs[0].set_title('Viscosity log10(Pa s)')           # set plot title

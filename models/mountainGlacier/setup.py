@@ -20,11 +20,11 @@ from solver.physics.markerUtils import findNearestNode
 
 def mountain_slope_curve(x, params):
     '''
-    Define bedrock slope as concave up decreasing curve. Follows roughly bedrock slope of 15% (y=0.15x).
+    Define bedrock slope as horizontal line.
 
     '''
 
-    return params.ysize - 100.
+    return params.ysize - 75 #100.
 
 
 def glacier_surface_curve(x, params):
@@ -33,7 +33,6 @@ def glacier_surface_curve(x, params):
 
     '''
 
-    # return 3500/(4000**4)*x**4 + 137.5  + (-x*0.32 + 475)   # steep
     return 3500/(4000**4)*x**4 + 137.5  + (-x*0.16 + 200)
     # return 3500/(4000**4)*x**4 + 37.5*2  # thinner ice
 
@@ -68,8 +67,8 @@ def initializeModel():
     params = Parameters()
 
     # set resolution
-    xnum = 321 #401   # 321   # 12.5 m
-    ynum = 33  #41    # 33    # 12.5 m
+    xnum = 321   # 12.5 m; if changing change also .bx even if unused !!!
+    ynum = 33    # 12.5 m; if changing change also .by even if unused !!!
 
 
     # instantiate/load material properties object
@@ -155,87 +154,34 @@ def initialize_markers(markers, materials, params):
             # set coordinates as grid + small random displacement
             markers.x[mm] = (j + np.random.random())*mxstp
             markers.y[mm] = (i + np.random.random())*mystp
-
             # bedrock
             if markers.y[mm] >= mountain_slope_curve(markers.x[mm], params) or markers.y[mm] >= params.ysize-params.by:
                 markers.id[mm] = 1
-                markers.T[mm]  = 293    # 20 °C
-            
-            # glacier   # try to reproduce glacier shape from SIA
+                markers.T[mm]  = 293   # 20 °C
+            # Bump in the bedrock
+            elif markers.x[mm] >= 1800 and markers.x[mm] <2200 and markers.y[mm] > -0.125*markers.x[mm]+550 or markers.x[mm] >=2200 and markers.x[mm] <2300 and markers.y[mm] > 275 or markers.x[mm] >=2300 and markers.x[mm]<2400 and markers.y[mm] > 0.25*markers.x[mm]-300:
+                markers.id[mm] = 1
+                markers.T[mm] = 293
+            #Basal ice layer
+            elif markers.y[mm] >= 300 and markers.y[mm] <= 325 or markers.x[mm] >=1800 and markers.x[mm] < 2200 and markers.y[mm] > -0.125*markers.x[mm]+537.5:
+                    markers.id[mm] = 4
+                    markers.T[mm] = 273-15
             elif markers.y[mm] >= glacier_surface_curve(markers.x[mm], params):
-                markers.id[mm] = 2
-                markers.T[mm]  = 273 #-15    # 0 °C
+                if (markers.y[mm] > 180 and markers.y[mm] <= 190) or (markers.y[mm] > 200 and markers.y[mm] <= 210) or (markers.y[mm] > 220 and markers.y[mm] <= 230) or (markers.y[mm] > 240 and markers.y[mm] <= 250) or (markers.y[mm]> 260 and markers.y[mm] <= 270):
+                    markers.id[mm] = 3
+                    markers.T[mm] = 273-15
+                else:
+                    markers.id[mm] = 2
+                    markers.T[mm]  = 273-15   # -15°C
 
             # air         
             else: 
-                # dtdy = 6.5/1000 # approximate environmental adiabetic lapse rate for the air °C/m
                 markers.id[mm] = 0 
-                markers.T[mm] = 283 #- dtdy*(params.ysize - markers.y[mm]) # 10 °C
+                markers.T[mm] = 273+10   # 10 °C
 
             # update marker index
             mm +=1
-    # plt.title('Model setup: initial markers \n shows different materials (air, bedrock, ice)')
-    # plt.scatter(markers.x, markers.y, c=markers.id)
-    # plt.xlim(0,params.xsize)
-    # plt.ylim(params.ysize,0)
-    # plt.xlabel('distance [m]')
-    # plt.ylabel('height [m]')
-    # plt.show()
     
-
-def updateMarkers(markers, params, grid):
-    '''
-    Change material type from air to glacier where air markers get caught between the 
-    glacier base and the bedrock.
-
-    Parameters
-    ----------
-    markers : Markers object
-        Contains all the marker values for each variable.
-    params : Parameters Class
-        Parameters object containing all simulation parameters for the system.
-    grid : OBJ
-        The grid object into which the new node positions will be written.
-
-    Returns
-    -------
-    None.
-
-    '''
-
-    # Find glacier markers and sort by x-position
-    glacier_markers = np.where(markers.id == 2)[0]
-    sorted_glacier_markers = sorted(glacier_markers, key=lambda m: markers.x[m])
-
-    # Lower bound for column
-    low_x = 0.0   # Start from left boundary for first column
-
-    # Loop over glacier markers (from left boundary towards right)
-    for i in sorted_glacier_markers:
-        current_x = markers.x[i]
-
-        # Locate markers between lower bound and current x-position
-
-        # Find markers between prev_x and current_x and sort by y-position
-        mask = (markers.x >= low_x) & (markers.x <= current_x)
-        pot_markers = np.where(mask)[0]
-        sorted_pot_markers = sorted(pot_markers, key=lambda m: markers.y[m])
-
-        # Scan downward (toward higher y) and convert air markers to ice
-        # Search through column from top ("air") to bottom ("bedrock") and change air markers to ice 
-        found_glacier = False
-        for m in sorted_pot_markers:
-            if markers.id[m] == 1:                      # bedrock
-                break
-            elif markers.id[m] == 2:                    # glacier marker
-                found_glacier = True
-            elif markers.id[m] == 0 and found_glacier:  # air marker for which glacier marker has been passed already
-                 markers.id[m] = 2
-                 markers.T[m] = 273.0 + 20.0            # !!! set higher temporarily to easily spot changed markers !!!
-
-        # Update lower bound for the next iteration
-        low_x = current_x
-
 
 
 def updateGrid(params, grid, t_curr, timestep, BC_bot):
@@ -518,8 +464,8 @@ class Parameters():
         self.v_ext = 2.0/(100*365.25*24*3600)   # extension velocity of the grid (cm/yr)
         
         # timestepping
-        self.t_end = 1000*365.25*24*3600        # end time
-        self.ntstp_max = 360                    # maximum number of timesteps
+        self.t_end = 1000*365.25*24*3600*2        # end time
+        self.ntstp_max = 360*2                    # maximum number of timesteps
         self.Temp_stp_max = 20                  # maximum number of temperature substeps
         
         self.tstp_max = 365.25*24*3600          # maximum timestep
@@ -541,7 +487,7 @@ class Parameters():
         # output options
         self.save_output = 50                   # number of steps between output files
         self.save_fig = 30                      # number of steps between figure output
-        self.output_name = "mountainGlacier/00reftilt2"
+        self.output_name = "mountainGlacier/00refcoolbump"
         self.output_path = "../../Results/figures"
         
                 
@@ -559,5 +505,5 @@ class Parameters():
 
         self.viscbox = ViscBox(0)
 
-        self.T_top = 273+10 #- (6.5/1000)*self.ysize #self.T_min                 # temperature at the top face of the model (K)
-        self.T_bot = 273+20 #1750                       # temperature at the bottom face of the model (K)
+        self.T_top = 273+10 #                      # temperature at the top face of the model (K)
+        self.T_bot = 273+20 #                      # temperature at the bottom face of the model (K)
