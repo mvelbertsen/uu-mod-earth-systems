@@ -17,7 +17,7 @@ import numpy as np ## added temp for max vels
 sys.path.append("../../") # required so that we can find the central model code from here!
 from solver.dataStructures import Grid
 from solver.main import step
-from setup import initializeModel, updateMarkers # updateGrid
+from setup import initializeModel # updateGrid
 from visualisation import makePlots
 
 from solver.dataStructures import copyGrid
@@ -129,11 +129,8 @@ for nt in range(0, params.ntstp_max):
     
     ###########################################################################
     # Make any model-specific adjustments 
-    # Update air markers trapped below glacier
-    # updateMarkers(markers, params, grid)
 
-    
-        
+     
     ###########################################################################
     # exit if final time is reached
     if (time_curr >= params.t_end):
