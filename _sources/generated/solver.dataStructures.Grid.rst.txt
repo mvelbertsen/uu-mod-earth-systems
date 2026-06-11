@@ -1,0 +1,31 @@
+solver.dataStructures.Grid
+==========================
+
+.. currentmodule:: solver.dataStructures
+
+.. autoclass:: Grid
+   :members:
+   :show-inheritance:
+   :inherited-members:
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Grid.__init__
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Grid.class_type
+   
+   

@@ -1,0 +1,22 @@
+﻿models.simpleStokes.setup
+=========================
+
+.. automodule:: models.simpleStokes.setup
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+   
+      initializeModel
+      initialize_markers
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom_class.rst
+   
+      Parameters
+   

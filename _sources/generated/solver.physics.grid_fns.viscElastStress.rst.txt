@@ -1,0 +1,6 @@
+solver.physics.grid\_fns.viscElastStress
+========================================
+
+.. currentmodule:: solver.physics.grid_fns
+
+.. autofunction:: viscElastStress

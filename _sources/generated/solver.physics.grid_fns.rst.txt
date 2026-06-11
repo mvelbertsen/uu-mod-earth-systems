@@ -1,0 +1,16 @@
+﻿solver.physics.grid\_fns
+========================
+
+.. automodule:: solver.physics.grid_fns
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+   
+      basicGridVelocities
+      strainRateComps
+      updateStresses
+      viscElastStress
+   

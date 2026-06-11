@@ -1,0 +1,6 @@
+solver.physics.grid\_fns.strainRateComps
+========================================
+
+.. currentmodule:: solver.physics.grid_fns
+
+.. autofunction:: strainRateComps

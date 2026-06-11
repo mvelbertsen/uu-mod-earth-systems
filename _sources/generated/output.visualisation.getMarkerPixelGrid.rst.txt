@@ -1,0 +1,6 @@
+output.visualisation.getMarkerPixelGrid
+=======================================
+
+.. currentmodule:: output.visualisation
+
+.. autofunction:: getMarkerPixelGrid

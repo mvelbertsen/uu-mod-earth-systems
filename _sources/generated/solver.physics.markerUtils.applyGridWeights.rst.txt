@@ -1,0 +1,6 @@
+solver.physics.markerUtils.applyGridWeights
+===========================================
+
+.. currentmodule:: solver.physics.markerUtils
+
+.. autofunction:: applyGridWeights

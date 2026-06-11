@@ -1,0 +1,13 @@
+﻿solver.main
+===========
+
+.. automodule:: solver.main
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+   
+      step
+   

@@ -1,0 +1,6 @@
+solver.physics.grid\_fns.basicGridVelocities
+============================================
+
+.. currentmodule:: solver.physics.grid_fns
+
+.. autofunction:: basicGridVelocities

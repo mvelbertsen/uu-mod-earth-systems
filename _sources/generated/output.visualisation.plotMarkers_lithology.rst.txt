@@ -1,0 +1,6 @@
+output.visualisation.plotMarkers\_lithology
+===========================================
+
+.. currentmodule:: output.visualisation
+
+.. autofunction:: plotMarkers_lithology

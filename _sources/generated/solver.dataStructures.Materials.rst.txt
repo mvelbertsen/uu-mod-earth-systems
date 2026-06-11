@@ -1,0 +1,31 @@
+solver.dataStructures.Materials
+===============================
+
+.. currentmodule:: solver.dataStructures
+
+.. autoclass:: Materials
+   :members:
+   :show-inheritance:
+   :inherited-members:
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~Materials.__init__
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~Materials.class_type
+   
+   

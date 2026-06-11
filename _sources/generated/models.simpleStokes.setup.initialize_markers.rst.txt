@@ -1,0 +1,6 @@
+models.simpleStokes.setup.initialize\_markers
+=============================================
+
+.. currentmodule:: models.simpleStokes.setup
+
+.. autofunction:: initialize_markers

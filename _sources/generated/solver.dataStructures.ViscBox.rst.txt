@@ -1,0 +1,31 @@
+solver.dataStructures.ViscBox
+=============================
+
+.. currentmodule:: solver.dataStructures
+
+.. autoclass:: ViscBox
+   :members:
+   :show-inheritance:
+   :inherited-members:
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~ViscBox.__init__
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~ViscBox.class_type
+   
+   

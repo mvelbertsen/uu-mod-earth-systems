@@ -1,0 +1,17 @@
+﻿solver.physics.markerUtils
+==========================
+
+.. automodule:: solver.physics.markerUtils
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+   
+      applyGridContrib
+      applyGridWeights
+      applyMarkerContrib
+      findNearestNode
+      getMarkerNodeDistances
+   
