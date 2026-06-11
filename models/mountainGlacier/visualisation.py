@@ -226,8 +226,9 @@ def makePlots(grid, markers, params, ntstp, t_curr):
     xlims = (grid.x[0], grid.x[-1])
     ylims = (grid.y[-1], grid.y[0])
     
-    plotTemperature(grid, params, ntstp, t_curr, xlims, ylims, aspect_ratio=3)
-    plotSummary(grid, params, ntstp, t_curr, xlims, ylims, aspect_ratio=3, plotTempContours=True, temp_levels=[-10, -5, 0, 5, 10, 25, 50, 100, 500])
+    plotTemperature(grid, params, ntstp, t_curr, xlims, ylims, aspect_ratio=3, Tmin=-2.5, Tmax=7.5)
+    plotSummary(grid, params, ntstp, t_curr, xlims, ylims, aspect_ratio=3, plotTempContours=True, temp_levels=[-10, -5, 0, 5, 10, 25, 50, 100, 500],
+                rhomin=500, rhomax=1500, vmin=10, vmax=15, Pmin=0e6, Pmax=2.4e6)
     plotMarkers_lithology(params, markers, grid, ntstp, t_curr, xlims, ylims, aspect_ratio=3)
     plotMarkers_strain(params, markers, grid, ntstp, t_curr)
     plotMarkers_stress(params, markers, grid, ntstp, t_curr)
@@ -337,36 +338,3 @@ def Plot_Vis_strain_stress(params, markers, grid, ntstp, t_curr, xlims, ylims, a
 
     fig.suptitle('Time: %.3f Myr'%(t_curr*1e-6/(365.25*24*3600)))
     fig.savefig('%s/%s/allthree_%i.png'%(params.output_path, params.output_name, ntstp))
-
-
-
-
-def animateAVar(grid_list, vxb_list, vyb_list, params, t_list, filename='animation.mp4'):
-    """
-    Animate a variable as a colormap with velocity arrows.
-    """
-
-    X, Y = np.meshgrid(grid_list[0].x, grid_list[0].y)
-
-    fig, ax = plt.subplots(figsize=(9, 9), constrained_layout=True)
-    im = ax.pcolor(X, Y, grid_list[0].rho, shading='nearest', vmin=0, vmax=3000)
-    quiv = ax.quiver(grid_list[0].x, grid_list[0].y, vxb_list[0], np.flip(-vyb_list[0], 0))
-    ax.set_title('Density')
-    ax.set(ylabel='y (km)')
-    ax.invert_yaxis()
-
-    def update(frame):
-        grid = grid_list[frame]
-        vxb = vxb_list[frame]
-        vyb = vyb_list[frame]
-        im.set_array(grid.rho.ravel())
-        quiv.set_UVC(vxb, np.flip(-vyb, 0))
-        ax.set_title(f'Density - Time: {t_list[frame]:.3f} yr')
-        return im, quiv
-
-    anim = FuncAnimation(fig, update, frames=len(grid_list), blit=False)
-    # anim.save(filename, writer='pillow')
-    anim.save('%s/%s/%s'%(params.output_path, params.output_name, filename), writer='pillow')
-    plt.close(fig)
-
-    print('Animation made')

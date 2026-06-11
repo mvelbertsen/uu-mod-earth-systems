@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Setup for a lithospheric extension model, the default setup for the original code.
+Setup for a mountain glacier model, the default setup for the original code.
 
 """
 
@@ -14,7 +14,7 @@ from numba.experimental import jitclass
 
 from solver.dataStructures import Markers, Grid, Materials, ViscBox
 from solver.physics.boundaryConditions import BCs
-from solver.physics.markerUtils import findNearestNode
+from models.common import uniformGrid
 
 
 
@@ -24,7 +24,7 @@ def mountain_slope_curve(x, params):
 
     '''
 
-    return params.ysize - 75 #100.
+    return params.ysize - 75
 
 
 def glacier_surface_curve(x, params):
@@ -34,7 +34,6 @@ def glacier_surface_curve(x, params):
     '''
 
     return 3500/(4000**4)*x**4 + 137.5  + (-x*0.16 + 200)
-    # return 3500/(4000**4)*x**4 + 37.5*2  # thinner ice
 
 
 
@@ -67,8 +66,8 @@ def initializeModel():
     params = Parameters()
 
     # set resolution
-    xnum = 321   # 12.5 m; if changing change also .bx even if unused !!!
-    ynum = 33    # 12.5 m; if changing change also .by even if unused !!!
+    xnum = 321   # 12.5 m
+    ynum = 33    # 12.5 m
 
 
     # instantiate/load material properties object
@@ -86,11 +85,9 @@ def initializeModel():
     
     # velocity BCs
     BC.set_top_BC("free slip")
-
-    # manually set the bottom, left and right boundaries to include the grid velocity
-    BC.B_bottom[:,1] = 1
-    BC.B_left[:,3] = 1
-    BC.B_right[:,3] = 1
+    BC.set_bottom_BC("free slip")
+    BC.set_left_BC("free slip")
+    BC.set_right_BC("free slip")
 
     # temperature BCs
     # upper and lower  = fixed T
@@ -105,8 +102,8 @@ def initializeModel():
     # create grid object
     grid = Grid(xnum, ynum)
 
-    # define grid points for (potentially) unevenly spaced grid
-    updateGrid(params, grid, 0, 0.0, BC.B_bottom)
+    # define grid points for uniform grid
+    uniformGrid(params, grid)
 
     ############################################################################
     # create markers object
@@ -182,132 +179,6 @@ def initialize_markers(markers, materials, params):
             # update marker index
             mm +=1
     
-
-
-def updateGrid(params, grid, t_curr, timestep, BC_bot):
-    '''
-    Calculates the new grid point spacings based on the current xsize and ysize.
-    This version contructs a non-uniform grid with a central-upper high resolution region
-    and decreasing resolution outward from this.
-
-    Parameters
-    ----------
-    params : Parameters Class
-        Parameters object containing all simulation parameters for the system.
-    grid : OBJ
-        The grid object into which the new node positions will be written.
-    t_curr : FLOAT
-        The current simulation time, to determine whether to set up grid from scratch
-        or extend an existing one.
-    timestep : FLOAT
-        The current timestep size.
-    BC_bot : ARRAY
-        The boundary condition which should also be updated by whatever changes
-        are made to the grid, in this case the bottom.
-
-    Returns
-    -------
-    None.
-
-    '''
-    
-    if (t_curr > 0 and params.const==1):
-        # we don't need to recalculate the grid, return here!
-        return 0
-    
-    xnum = grid.xnum
-    ynum = grid.ynum
-    
-    # pull out the required parameters from params object
-    bx = params.bx
-    by = params.by
-    Nx = params.Nx
-    Ny = params.Ny
-    
-    non_uni_xsize = params.non_uni_xsize
-
-    
-    ###############################################################################
-    # Horizontal grid
-
-    if (t_curr==0):
-        # set the points in the high res area
-        # this only needs doing on the initial setup
-        grid.x[Nx] = non_uni_xsize 
-        for i in range(Nx+1,xnum-Nx):  #xnum
-            grid.x[i] = grid.x[i-1] + bx
-            
-        # size of the non-uniform region 
-        D = params.xsize - grid.x[xnum-Nx-1]
-
-    else:
-        
-        # update grid positions based on extension
-        params.ysize += -params.v_ext/params.xsize*params.ysize*timestep
-        params.xsize += params.v_ext*timestep
-        
-        # set the new position of the first node,
-        # and the size of the non-uniform region
-        grid.x[0] = grid.x[int(xnum/2)] - params.xsize/2
-        D = params.xsize/2 - (grid.x[xnum-Nx-1] - grid.x[int(xnum/2)])
-        
-        # if we have changing grid, we also need to update bottom BC
-        if (abs(params.v_ext)>0):
-            BC_bot[:,2] = -params.v_ext/params.xsize*params.ysize
-        
-    
-    # define factor of grid spacing to increase to the right of high res area
-    # need to only do this for non-uniform def, otherwise div by 0!
-    if (Nx > 0):
-        F = 1.1
-        # iteratively solve for F
-        for i in range(0,200):
-            F = (1 + D/bx*(1 - 1/F))**(1/Nx)
-    
-        # define grid points to the right of the high-res region
-        for i in range(xnum-Nx, xnum):
-            grid.x[i] = grid.x[i-1] + bx*F**(i-(xnum-Nx-1))
-        
-        if (t_curr==0):
-            grid.x[xnum-1] = params.xsize
-    
-        # now do the same going leftward
-        D = grid.x[Nx] - grid.x[0] # think this should still work for inital case?
-    
-        F = 1.1
-        for i in range(0,100):
-            F = (1 + D/bx*(1 - 1/F))**(1/Nx)
-    
-        # set the points left of the high res region
-        for i in range(1,Nx):
-            grid.x[i] = grid.x[i-1] + bx*F**(Nx+1-i)
-        
-    
-    ###########################################################################
-    # Vertical grid
-    # one-sided, there is high resolution at the top of the grid and then a decreasing region below
-
-    # set the high resolution area, assumes y[0] = 0
-    for i in range(1,ynum-Ny):
-        grid.y[i] = grid.y[i-1] + by
-      
-    
-    if (Ny > 0):
-        # size of the non-uniform regions
-        D = params.ysize - grid.y[ynum-Ny-1]
-       
-        # solve iteratively for scaling factor
-        F = 1.1
-        for i in range(0,100):
-            F = (1 + D/by*(1 - 1/F))**(1/Ny)
-            # set the grid points below the high-res region
-        for i in range(ynum-Ny, ynum):
-            grid.y[i] = grid.y[i-1] + by*F**(i-(ynum-Ny-1))
-           
-        # fix the end position if this is the first step
-        if (t_curr==0):
-            grid.y[ynum-1] = params.ysize
-
 
 
     
@@ -444,7 +315,6 @@ class Parameters():
         
         # physical constants
         theta   = np.arctan(0.16/1.)            # standard
-        # theta   = np.arctan(0.32/1.)            # steep
         self.gx = 9.81*np.sin(theta)            # x-direction gravitational acc
         self.gy = 9.81*np.cos(theta)            # y-direction gravitational acc
         self.Rgas = 8.314                       # gas constant
@@ -487,7 +357,7 @@ class Parameters():
         # output options
         self.save_output = 50                   # number of steps between output files
         self.save_fig = 30                      # number of steps between figure output
-        self.output_name = "mountainGlacier/00refcoolbump"
+        self.output_name = "mountainGlacier/00refcoolbumpvtest"
         self.output_path = "../../Results/figures"
         
                 
