@@ -1,0 +1,6 @@
+solver.main.step
+================
+
+.. currentmodule:: solver.main
+
+.. autofunction:: step

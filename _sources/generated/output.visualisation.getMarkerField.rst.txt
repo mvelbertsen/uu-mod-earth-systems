@@ -1,0 +1,6 @@
+output.visualisation.getMarkerField
+===================================
+
+.. currentmodule:: output.visualisation
+
+.. autofunction:: getMarkerField

@@ -1,0 +1,40 @@
+solver.physics.boundaryConditions.BCs
+=====================================
+
+.. currentmodule:: solver.physics.boundaryConditions
+
+.. autoclass:: BCs
+   :members:
+   :show-inheritance:
+   :inherited-members:
+
+   
+   .. automethod:: __init__
+
+   
+   .. rubric:: Methods
+
+   .. autosummary::
+   
+      ~BCs.__init__
+      ~BCs.set_T_BC
+      ~BCs.set_bottom_BC
+      ~BCs.set_bottom_T_BC
+      ~BCs.set_left_BC
+      ~BCs.set_left_T_BC
+      ~BCs.set_right_BC
+      ~BCs.set_right_T_BC
+      ~BCs.set_top_BC
+      ~BCs.set_top_T_BC
+   
+   
+
+   
+   
+   .. rubric:: Attributes
+
+   .. autosummary::
+   
+      ~BCs.class_type
+   
+   

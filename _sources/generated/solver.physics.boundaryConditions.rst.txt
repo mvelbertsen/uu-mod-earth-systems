@@ -1,0 +1,14 @@
+﻿solver.physics.boundaryConditions
+=================================
+
+.. automodule:: solver.physics.boundaryConditions
+
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom_class.rst
+   
+      BCs
+   

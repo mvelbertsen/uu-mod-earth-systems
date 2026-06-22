@@ -1,0 +1,6 @@
+solver.physics.markers\_fns.markersToGrid
+=========================================
+
+.. currentmodule:: solver.physics.markers_fns
+
+.. autofunction:: markersToGrid

@@ -1,0 +1,6 @@
+solver.physics.TemperatureSolver.TemperatureSolver
+==================================================
+
+.. currentmodule:: solver.physics.TemperatureSolver
+
+.. autofunction:: TemperatureSolver

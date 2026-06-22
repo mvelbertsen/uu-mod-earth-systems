@@ -1,0 +1,6 @@
+solver.physics.TemperatureSolver.calculateResiduals
+===================================================
+
+.. currentmodule:: solver.physics.TemperatureSolver
+
+.. autofunction:: calculateResiduals

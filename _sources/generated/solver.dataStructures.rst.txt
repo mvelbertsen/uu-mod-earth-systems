@@ -1,0 +1,24 @@
+﻿solver.dataStructures
+=====================
+
+.. automodule:: solver.dataStructures
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+   
+      copyGrid
+   
+   .. rubric:: Classes
+
+   .. autosummary::
+      :toctree:
+      :template: custom_class.rst
+   
+      Grid
+      Markers
+      Materials
+      ViscBox
+   

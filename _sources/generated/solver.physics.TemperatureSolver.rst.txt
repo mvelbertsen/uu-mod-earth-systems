@@ -1,0 +1,17 @@
+﻿solver.physics.TemperatureSolver
+================================
+
+.. automodule:: solver.physics.TemperatureSolver
+
+   
+   .. rubric:: Functions
+
+   .. autosummary::
+      :toctree:
+   
+      S_to_grid
+      TemperatureConstructMatrix
+      TemperatureSolver
+      calculateResiduals
+      constructTempRHS
+   

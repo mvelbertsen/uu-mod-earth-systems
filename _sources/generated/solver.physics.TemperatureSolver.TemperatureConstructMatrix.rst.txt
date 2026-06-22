@@ -1,0 +1,6 @@
+solver.physics.TemperatureSolver.TemperatureConstructMatrix
+===========================================================
+
+.. currentmodule:: solver.physics.TemperatureSolver
+
+.. autofunction:: TemperatureConstructMatrix

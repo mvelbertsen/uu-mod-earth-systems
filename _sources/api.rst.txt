@@ -1,0 +1,21 @@
+API
+===
+
+The API (Application Programming Interface) is documented here.  It lists all the available functions and classes, with descriptions of what they do, what arguments they take and what they return.
+
+.. autosummary::
+   :toctree: generated
+   :template: custom_module.rst
+   :recursive:
+   
+   solver.dataStructures
+   solver.physics.markers_fns
+   solver.physics.grid_fns
+   solver.physics.markerUtils
+   solver.physics.StokesContinuitySolver
+   solver.physics.TemperatureSolver
+   solver.physics.boundaryConditions
+   solver.main
+   output.visualisation
+   models.common
+   models.simpleStokes.setup
